@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 export const dynamic = 'force-dynamic'
 
 export default async function Dashboard() {
-  const supabase = createClient()
+  const supabase = await createClient()
 
   const { data: invoices, error } = await supabase
     .from('invoices')

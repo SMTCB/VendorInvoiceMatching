@@ -13,7 +13,7 @@ interface PageProps {
 }
 
 export default async function InvoiceDetailPage({ params }: PageProps) {
-    const supabase = createClient()
+    const supabase = await createClient()
 
     // Fetch Invoice Header
     const { data: invoice, error: invError } = await supabase
