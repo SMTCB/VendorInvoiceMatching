@@ -2,23 +2,33 @@
 
 :root {
   /* Enterprise Palette - Deep Blue & Slate */
-  --background: #f8f9fa; /* Light Grey Background for reduced eye strain */
-  --foreground: #1e293b; /* Slate-900 for text */
-  
-  --primary: #0f172a; /* Slate 900 - Strong, Corporate */
+  --background: #f8f9fa;
+  /* Light Grey Background for reduced eye strain */
+  --foreground: #1e293b;
+  /* Slate-900 for text */
+
+  --primary: #0f172a;
+  /* Slate 900 - Strong, Corporate */
   --primary-foreground: #ffffff;
-  
-  --secondary: #3b82f6; /* Blue 500 - Actionable */
+
+  --secondary: #06b6d4;
+  /* Cyan 500 - AI Accent */
   --secondary-foreground: #ffffff;
-  
-  --muted: #64748b; /* Slate 500 - Subtitles */
-  --border: #e2e8f0; /* Slate 200 - Borders */
-  
+
+  --muted: #64748b;
+  /* Slate 500 - Subtitles */
+  --border: #e2e8f0;
+  /* Slate 200 - Borders */
+
   /* Semantic Status Colors */
-  --status-success: #10b981; /* Emerald 500 */
-  --status-warning: #f59e0b; /* Amber 500 */
-  --status-error: #ef4444; /* Red 500 */
-  --status-info: #3b82f6; /* Blue 500 */
+  --status-success: #10b981;
+  /* Emerald 500 */
+  --status-warning: #f59e0b;
+  /* Amber 500 */
+  --status-error: #ef4444;
+  /* Red 500 */
+  --status-info: #0ea5e9;
+  /* Sky 500 */
 }
 
 @theme inline {
@@ -30,8 +40,9 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted: var(--muted);
   --color-border: var(--border);
-  
-  --font-sans: var(--font-inter); /* Switched to Inter */
+
+  --font-sans: var(--font-inter);
+  /* Switched to Inter */
 }
 
 body {

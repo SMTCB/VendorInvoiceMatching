@@ -11,7 +11,7 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: "AP + AI | Intelligent Invoice Matching",
-  description: "Automated Accounts Payable for the Enterprise",
+  description: "AP + AI: Your Accounts Payable meet AI",
 };
 
 import { Logo } from "@/components/ui/logo";
@@ -28,7 +28,7 @@ export default function RootLayout({
         <aside className="w-64 bg-slate-900 text-white flex-shrink-0 flex flex-col">
           <div className="p-6 border-b border-slate-800">
             <Logo showText={true} className="text-white [&_span]:text-white" />
-            <p className="text-xs text-slate-400 mt-2 pl-1">Vendor Invoice Matching</p>
+            <p className="text-xs text-slate-400 mt-2 pl-1">Your Accounts Payable meet AI</p>
           </div>
 
           <nav className="flex-1 p-4 space-y-1">
@@ -68,8 +68,8 @@ function NavLink({ href, icon, label, active = false }: { href: string; icon: Re
     <Link
       href={href}
       className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${active
-          ? "bg-slate-800 text-white"
-          : "text-slate-400 hover:text-white hover:bg-slate-800"
+        ? "bg-slate-800 text-white"
+        : "text-slate-400 hover:text-white hover:bg-slate-800"
         }`}
     >
       {icon}
