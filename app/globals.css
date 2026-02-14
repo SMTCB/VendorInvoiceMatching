@@ -1,26 +1,42 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Enterprise Palette - Deep Blue & Slate */
+  --background: #f8f9fa; /* Light Grey Background for reduced eye strain */
+  --foreground: #1e293b; /* Slate-900 for text */
+  
+  --primary: #0f172a; /* Slate 900 - Strong, Corporate */
+  --primary-foreground: #ffffff;
+  
+  --secondary: #3b82f6; /* Blue 500 - Actionable */
+  --secondary-foreground: #ffffff;
+  
+  --muted: #64748b; /* Slate 500 - Subtitles */
+  --border: #e2e8f0; /* Slate 200 - Borders */
+  
+  /* Semantic Status Colors */
+  --status-success: #10b981; /* Emerald 500 */
+  --status-warning: #f59e0b; /* Amber 500 */
+  --status-error: #ef4444; /* Red 500 */
+  --status-info: #3b82f6; /* Blue 500 */
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  
+  --font-sans: var(--font-inter); /* Switched to Inter */
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans), sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
