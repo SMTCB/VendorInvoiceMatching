@@ -2,7 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { StatusBadge } from '@/components/ui/invoice-status-badge'
-import { ChevronLeft, Check, X, AlertTriangle, FileText } from 'lucide-react'
+import { InvoiceActions } from '@/components/invoice-actions'
+import { ChevronLeft, Check, AlertTriangle, FileText } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
@@ -50,14 +51,7 @@ export default async function InvoiceDetailPage({ params }: PageProps) {
                     </h1>
                     <StatusBadge status={invoice.status} />
                 </div>
-                <div className="flex items-center gap-3">
-                    <button className="px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50">
-                        Reject
-                    </button>
-                    <button className="px-3 py-1.5 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700">
-                        Post Invoice
-                    </button>
-                </div>
+                <InvoiceActions invoiceId={invoice.id} status={invoice.status} />
             </header>
 
             {/* Main Content */}
