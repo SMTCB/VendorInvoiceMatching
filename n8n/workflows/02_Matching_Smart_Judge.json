@@ -1,0 +1,404 @@
+{
+  "name": "02_Matching_Smart_Judge",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "ekpo",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "po_number",
+              "condition": "eq",
+              "keyValue": "={{ $json.po_reference }}"
+            }
+          ]
+        }
+      },
+      "id": "fb0322d7-a4ef-46e9-8eb7-b8ad428a2efd",
+      "name": "Fetch PO Lines",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        384,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "lCJ6y77GtHhdrQRD",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "exception_rules",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "is_active",
+              "condition": "eq",
+              "keyValue": "true"
+            }
+          ]
+        }
+      },
+      "id": "aca9aaad-980a-4960-a176-226062fa1e17",
+      "name": "Fetch Rules",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        560,
+        0
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "lCJ6y77GtHhdrQRD",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "ai_learning_examples",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "expected_status",
+              "condition": "eq",
+              "keyValue": "READY_TO_POST"
+            }
+          ]
+        }
+      },
+      "id": "7b3048ec-5ce8-4b9a-83b7-f4d5fa5699c0",
+      "name": "Fetch Examples",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        720,
+        0
+      ],
+      "alwaysOutputData": true,
+      "executeOnce": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "lCJ6y77GtHhdrQRD",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.po_reference }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "1e976137-715d-4497-880d-8ec04d405437"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        176,
+        0
+      ],
+      "id": "69ea7bc4-7aef-4011-9518-3c786813efb2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes"
+            }
+          ]
+        }
+      },
+      "id": "b74bfca3-c0b8-4a81-8cf3-608eb2aad298",
+      "name": "Schedule",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1,
+      "position": [
+        -192,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "tableId": "invoices",
+        "returnAll": true,
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "status",
+              "condition": "eq",
+              "keyValue": "PROCESSING"
+            }
+          ]
+        }
+      },
+      "id": "257d9803-ef6a-4caa-b560-5c6f86b280d3",
+      "name": "Get Processing Invoices",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -16,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "lCJ6y77GtHhdrQRD",
+          "name": "Supabase account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert Accounts Payable Controller. Your job is to compare an INVOICE (JSON) against a PURCHASE ORDER (JSON).\n\n**STRICT RULES:**\n1. Tolerance is 0% UNLESS a specific Exception Rule applies.\n2. Check Unit Price: Invoice Price vs PO Price.\n3. Check Quantity: Invoice Qty vs PO Qty.\n\n**EXCEPTION RULES:**\n{{ JSON.stringify($(\"Fetch Rules\").all().map(i => i.json)) }}\n\n**LEARNING EXAMPLES:**\n{{ JSON.stringify($(\"Fetch Examples\").all().map(i => i.json)) }}\n\n**INVOICE DATA:**\n{{ JSON.stringify($(\"Get Processing Invoices\").item) }}\n\n**PO DATA:**\n{{ JSON.stringify($(\"Fetch PO Lines\").item) }}\n\n**OUTPUT JSON ONLY:**\n{\n  \"status\": \"READY_TO_POST\" | \"BLOCKED_PRICE\" | \"BLOCKED_QTY\" | \"AWAITING_INFO\",\n  \"exception_reason\": \"string explaining the error or null\",\n  \"confidence\": 0-100\n}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        896,
+        16
+      ],
+      "id": "69f4a5dc-7ced-412d-9b9f-a35cca656328",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-001",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        880,
+        224
+      ],
+      "id": "bbe2e37f-d10e-416f-9b76-9925dbbda64b",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GAGQnq629W7vOxFe",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "02_Matching_Smart_Judge Trigger"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        208
+      ],
+      "id": "714ec845-0b34-4b2b-a9ff-f6990c125f74",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the text output from the LLM\nconst text = $input.item.json.text || \"\";\n\n// Clean up markdown code blocks\nconst cleanJson = text.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\n\ntry {\n  // Parse into real object\n  return JSON.parse(cleanJson);\n} catch (error) {\n  return { error: \"Failed to parse JSON\" };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "3229f1b8-56a8-41aa-8ea1-54d0c9b841ba",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE invoices\nSET \n  status = '{{ $json.status }}',\n  exception_reason = '{{ $json.exception_reason }}',\n  updated_at = NOW()\nWHERE id = '{{ $item(0).$node[\"Get Processing Invoices\"].json[\"id\"] }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1472,
+        16
+      ],
+      "id": "6d814dd8-1ca7-4c98-9b51-64bb118f4882",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "zd9tE1ckuHzwYrry",
+          "name": "Postgres account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Fetch PO Lines": {
+      "main": [
+        [
+          {
+            "node": "Fetch Rules",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Rules": {
+      "main": [
+        [
+          {
+            "node": "Fetch Examples",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Fetch PO Lines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Schedule": {
+      "main": [
+        [
+          {
+            "node": "Get Processing Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Processing Invoices": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Examples": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get Processing Invoices",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "9255e17f-191b-42ad-a072-8343c8d0fecc",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d6710e9f15c70882d98afad91b3f6139fc5da765f9731179deba30590d41a06c"
+  },
+  "id": "BcJAvoHSugKpk5lc",
+  "tags": []
+}

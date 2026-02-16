@@ -5,18 +5,14 @@ import {
   CheckCircle,
   AlertCircle,
   Clock,
-  Search,
-  Filter,
-  ArrowUpRight,
-  DollarSign,
   TrendingUp,
-  Briefcase,
   Layers,
-  Zap,
   LayoutDashboard
 } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
 import { PollPortalButton } from '@/components/poll-portal-button'
+import { InvoiceList } from '@/components/invoice-list'
+import { formatDistanceToNow } from 'date-fns'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,15 +44,19 @@ export default async function Dashboard() {
   const exceptions = invoices?.filter(i => i.status.includes('BLOCKED') || i.status === 'REJECTED' || i.status === 'AWAITING_INFO').length || 0;
   const totalValue = invoices?.reduce((sum, i) => sum + (Number(i.total_amount) || 0), 0) || 0;
 
+  // Real Sync Time
+  const latestInvoice = invoices?.[0];
+  const lastSynced = latestInvoice
+    ? formatDistanceToNow(new Date(latestInvoice.created_at), { addSuffix: true })
+    : 'Never';
+
   return (
     <div className="flex-1 flex flex-col bg-slate-50 min-h-screen">
 
       {/* Premium Top Bar */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-4 sticky top-0 z-20 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="bg-brand-navy p-2 rounded-lg text-white shadow-inner">
-            <Logo showText={false} width={32} />
-          </div>
+          <Logo showText={false} width={32} />
           <div>
             <h1 className="text-lg font-bold text-slate-900 leading-tight tracking-tight">Intelligence Dashboard</h1>
             <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] opacity-70">AP + AI Operating System</p>
@@ -76,7 +76,7 @@ export default async function Dashboard() {
             <p className="text-slate-500 mt-1 text-lg">You have <span className="text-brand-blue font-bold">{readyToPost}</span> invoices ready for final posting.</p>
           </div>
           <div className="flex items-center gap-2 text-sm text-slate-400 font-medium italic">
-            <Clock size={16} /> Last synced: 2 minutes ago
+            <Clock size={16} /> Last synced: {lastSynced}
           </div>
         </section>
 
@@ -115,117 +115,7 @@ export default async function Dashboard() {
         </div>
 
         {/* List Section Container */}
-        <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden flex flex-col">
-
-          {/* List Header / Filter Bar */}
-          <div className="p-6 border-b border-slate-100 flex flex-col lg:flex-row lg:items-center justify-between gap-6 bg-slate-50/30">
-            <div className="flex items-center gap-4">
-              <h3 className="text-lg font-bold text-slate-900">Incoming Payables</h3>
-              <div className="bg-indigo-50 text-indigo-700 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-tighter ring-1 ring-indigo-100 italic flex items-center gap-1">
-                <Zap size={10} /> AI Enhanced
-              </div>
-            </div>
-
-            <div className="flex items-center gap-3 flex-wrap">
-              <div className="relative min-w-[300px]">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
-                <input
-                  type="text"
-                  placeholder="Search vendor name, PO or invoice #..."
-                  className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
-                />
-              </div>
-              <button className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 rounded-xl text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors shadow-sm">
-                <Filter size={14} /> Filters
-              </button>
-            </div>
-          </div>
-
-          {/* Table Area */}
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-slate-100">
-              <thead className="bg-white">
-                <tr>
-                  <th className="px-8 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Status</th>
-                  <th className="px-8 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Vendor Intelligence</th>
-                  <th className="px-8 py-4 text-left text-[11px] font-bold text-slate-400 uppercase tracking-widest">Financial Ref.</th>
-                  <th className="px-8 py-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-widest">Line Value</th>
-                  <th className="px-8 py-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-widest">Arrival Date</th>
-                  <th className="px-8 py-4 text-right text-[11px] font-bold text-slate-400 uppercase tracking-widest">Operation</th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-slate-50">
-                {actionableInvoices.length === 0 ? (
-                  <tr>
-                    <td colSpan={6} className="px-8 py-20 text-center text-slate-400">
-                      <div className="flex flex-col items-center justify-center max-w-xs mx-auto">
-                        <div className="bg-slate-50 p-6 rounded-full mb-4 ring-8 ring-slate-50/50">
-                          <Briefcase size={32} />
-                        </div>
-                        <p className="text-lg font-bold text-slate-900">Zero active items</p>
-                        <p className="text-sm mt-1">Your AP pipeline is clear. New invoices will appear here automatically.</p>
-                      </div>
-                    </td>
-                  </tr>
-                ) : (
-                  actionableInvoices.map((invoice) => (
-                    <tr key={invoice.id} className="hover:bg-slate-50/50 transition-colors group">
-                      <td className="px-8 py-6 whitespace-nowrap">
-                        <StatusBadge status={invoice.status} />
-                      </td>
-                      <td className="px-8 py-6 whitespace-nowrap">
-                        <div className="flex items-center gap-4">
-                          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-brand-navy to-brand-blue text-white flex items-center justify-center font-black text-xs shadow-md shadow-brand-blue/10">
-                            {invoice.vendor_name_extracted?.substring(0, 2).toUpperCase() || '?'}
-                          </div>
-                          <div>
-                            <div className="text-sm font-bold text-slate-900">{invoice.vendor_name_extracted || 'Extracting Vendor...'}</div>
-                            <div className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">SAP ID: {invoice.vendor_id || 'PENDING'}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6 whitespace-nowrap">
-                        <div className="flex flex-col gap-1">
-                          <span className="text-sm font-bold text-slate-800 tracking-tight">{invoice.invoice_number || 'INV-PENDING'}</span>
-                          <span className="text-[10px] px-1.5 py-0.5 bg-slate-100 text-slate-500 rounded font-bold w-fit">PO: {invoice.po_reference || 'SCANNING'}</span>
-                        </div>
-                      </td>
-                      <td className="px-8 py-6 whitespace-nowrap text-right">
-                        <span className="text-sm font-black text-slate-900 tabular-nums">
-                          {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(invoice.total_amount) || 0)}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6 whitespace-nowrap text-right">
-                        <span className="text-sm font-medium text-slate-500 tabular-nums">
-                          {new Date(invoice.created_at).toLocaleDateString()}
-                        </span>
-                      </td>
-                      <td className="px-8 py-6 whitespace-nowrap text-right">
-                        <Link
-                          href={`/invoices/${invoice.id}`}
-                          className="bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold text-slate-700 shadow-sm hover:bg-brand-navy hover:text-white hover:border-brand-navy hover:shadow-lg hover:shadow-brand-navy/20 transition-all flex items-center gap-2 w-fit ml-auto"
-                        >
-                          Review <ArrowUpRight size={12} />
-                        </Link>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
-          </div>
-
-          {/* List Footer */}
-          <div className="px-8 py-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-            <div className="text-xs font-bold text-slate-400 flex items-center gap-2">
-              <Layers size={14} /> Total Records: {invoices?.length}
-            </div>
-            <div className="flex gap-2">
-              <button disabled className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-400 cursor-not-allowed">Previous</button>
-              <button disabled className="px-4 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-400 cursor-not-allowed">Next</button>
-            </div>
-          </div>
-        </div>
+        <InvoiceList invoices={actionableInvoices} />
 
       </div>
     </div>

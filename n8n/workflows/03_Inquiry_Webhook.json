@@ -1,0 +1,119 @@
+{
+  "name": "03_Inquiry_Webhook",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "invoice-inquiry",
+        "options": {}
+      },
+      "id": "05df1ffc-23f1-4f91-8dff-fc7cc1586a13",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "e44cc01a-22de-4117-b130-4fc3516e7bc9"
+    },
+    {
+      "parameters": {
+        "fromEmail": "s.t.c.braganca@gmail.com",
+        "toEmail": "s.t.c.braganca@gmail.com",
+        "subject": "=Invoice Inquiry: {{ $json.body.invoice_number }}",
+        "text": "=Hi,\n\nWe have a question regarding Invoice {{ $json.body.invoice_number }} from {{ $json.body.vendor }}.\n\nAnalyst Note: \n{{ $json.body.custom_note }}\n\nPlease clarify.\n\nBest regards,\nAP Team",
+        "options": {}
+      },
+      "id": "8996d0cf-70ae-414d-95de-d04a85d81adb",
+      "name": "Send Email",
+      "type": "n8n-nodes-base.emailSend",
+      "typeVersion": 1,
+      "position": [
+        208,
+        0
+      ],
+      "credentials": {
+        "smtp": {
+          "id": "YzdbiYFViHa3DAzx",
+          "name": "SMTP account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "invoices",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id",
+              "condition": "eq",
+              "keyValue": "={{ $json.body.invoice_id }}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "status",
+              "fieldValue": "AWAITING_INFO"
+            }
+          ]
+        }
+      },
+      "id": "caa30c6d-c4e1-44de-9658-036248d6f18a",
+      "name": "Set Awaiting Info",
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        400,
+        0
+      ],
+      "credentials": {
+        "supabaseApi": {
+          "id": "lCJ6y77GtHhdrQRD",
+          "name": "Supabase account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Email": {
+      "main": [
+        [
+          {
+            "node": "Set Awaiting Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "a3fb98f0-c809-448e-a052-910379d20940",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d6710e9f15c70882d98afad91b3f6139fc5da765f9731179deba30590d41a06c"
+  },
+  "id": "Bv0X71WCpSDFQ0cU",
+  "tags": []
+}

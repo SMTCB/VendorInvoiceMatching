@@ -86,8 +86,8 @@ export default async function DocumentHub() {
                             <thead className="bg-slate-50/50">
                                 <tr>
                                     <th className="px-8 py-3 text-left font-bold text-slate-400 uppercase tracking-widest text-[10px]">Document Status</th>
-                                    <th className="px-8 py-3 text-left font-bold text-slate-400 uppercase tracking-widest text-[10px]">Vendor Reference</th>
-                                    <th className="px-8 py-3 text-left font-bold text-slate-400 uppercase tracking-widest text-[10px]">Financial Data</th>
+                                    <th className="px-8 py-3 text-left font-bold text-slate-400 uppercase tracking-widest text-[10px]">Vendor Name</th>
+                                    <th className="px-8 py-3 text-left font-bold text-slate-400 uppercase tracking-widest text-[10px]">Vendor Invoice Nr.</th>
                                     <th className="px-8 py-3 text-right font-bold text-slate-400 uppercase tracking-widest text-[10px]">Total (USD)</th>
                                     <th className="px-8 py-3 text-right font-bold text-slate-400 uppercase tracking-widest text-[10px]">Archived Date</th>
                                     <th className="px-8 py-3 text-right font-bold text-slate-400 uppercase tracking-widest text-[10px]">Action</th>

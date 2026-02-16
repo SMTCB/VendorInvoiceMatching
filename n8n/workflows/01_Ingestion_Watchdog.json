@@ -1,0 +1,383 @@
+{
+  "name": "01_Ingestion_Watchdog",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyHour"
+            }
+          ]
+        },
+        "triggerOn": "specificFolder",
+        "folderToWatch": {
+          "__rl": true,
+          "value": "1wxSginHaOrjEzb4KxeR5h9UZChKDPoue",
+          "mode": "id"
+        },
+        "event": "fileCreated",
+        "options": {
+          "fileType": "all"
+        }
+      },
+      "id": "dde7ff6f-454c-4ffd-9183-5f010f291d3b",
+      "name": "Google Drive Trigger",
+      "type": "n8n-nodes-base.googleDriveTrigger",
+      "typeVersion": 1,
+      "position": [
+        16,
+        256
+      ],
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lSw2kca5NYlWFFag",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "/* ROBUST OCR: Ghostscript -> TIFF -> Tesseract */\nconst { execSync } = require('child_process');\nconst fs = require('fs');\n\n// 1. Get the REAL binary data using helper\n// (This line is why we don't need the previous node!)\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\nif (!buffer) return [{ json: { error: \"No data found\" } }];\n\n// Distinct filenames \nconst pdfPath = '/tmp/robust_invoice.pdf';\nconst tiffPath = '/tmp/robust_invoice.tiff';\n\ntry {\n  // 2. Write PDF to disk\n  fs.writeFileSync(pdfPath, buffer);\n  \n  // 3. Convert PDF to High-Res TIFF using Ghostscript\n  // This step FIXES the \"Pdf reading is not supported\" error\n  execSync(`gs -q -dNOPAUSE -r300 -sDEVICE=tiffg4 -sOutputFile=${tiffPath} ${pdfPath} -c quit`);\n  \n  // 4. Run Tesseract on the TIFF image\n  const stdout = execSync(`tesseract ${tiffPath} stdout`).toString();\n  \n  // 5. Cleanup\n  if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);\n  if (fs.existsSync(tiffPath)) fs.unlinkSync(tiffPath);\n  \n  return [{ json: { stdout } }];\n  \n} catch (error) {\n  throw new Error('OCR Failed: ' + error.message);\n}"
+      },
+      "id": "440699bf-e24b-4fe4-a43a-391a75023f22",
+      "name": "Run Tesseract OCR (Code Node)",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        368,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are an expert AP Auditor.\nEXTRACT the following fields from the raw OCR text below and return strictly valid JSON.\n\nFields:\n- invoice_number (string)\n- po_reference (string)\n- vendor_name (string)\n- total_amount (number)\n- invoice_date (YYYY-MM-DD)\n- currency (USD/EUR)\n\nOCR TEXT:\n{{ $json.stdout }}\n\nIMPORTANT: RETURN ONLY THE JSON OBJECT. NO MARKDOWN BACKTICKS. NO DISCOUSE.\nExample: {\"invoice_number\": \"INV-123\", ...}",
+        "batching": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        544,
+        0
+      ],
+      "id": "5a8cb957-05a6-4549-a07b-c8094b55b80f",
+      "name": "Basic LLM Chain"
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-001",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        544,
+        192
+      ],
+      "id": "a7d2ea9a-bc5a-46c1-8305-bb311fff7049",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GAGQnq629W7vOxFe",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "download",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        208,
+        0
+      ],
+      "id": "6062c32e-30e4-4a81-8bb9-1b6cb7f9eb1f",
+      "name": "Download file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lSw2kca5NYlWFFag",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $node[\"Download file\"].json[\"id\"] }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list",
+          "cachedResultName": "My Drive",
+          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "10_Y_bu9Cz99MataERG6ylQEi6Zec7Ht-",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        1168,
+        0
+      ],
+      "id": "878a3f14-2365-4741-adf5-fb644d0ebd72",
+      "name": "Move file",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lSw2kca5NYlWFFag",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO invoices (\n  invoice_number, \n  po_reference, \n  vendor_name_extracted, \n  total_amount, \n  google_file_id, \n  status\n) VALUES (\n  '{{ $json.invoice_number }}', \n  '{{ $json.po_reference }}', \n  '{{ $json.vendor_name }}', \n  {{ $json.total_amount || 0 }}, \n  '{{ $node[\"Download file\"].json[\"id\"] }}', \n  'PROCESSING'\n) \nON CONFLICT (google_file_id) \nDO UPDATE SET \n  invoice_number = EXCLUDED.invoice_number,\n  vendor_name_extracted = EXCLUDED.vendor_name_extracted,\n  total_amount = EXCLUDED.total_amount,\n  updated_at = NOW();",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1008,
+        0
+      ],
+      "id": "e9a85f3c-830b-4672-b1f4-bb85db37bad9",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "zd9tE1ckuHzwYrry",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "BcJAvoHSugKpk5lc",
+          "mode": "list",
+          "cachedResultUrl": "/workflow/BcJAvoHSugKpk5lc",
+          "cachedResultName": "02_Matching_Smart_Judge"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {},
+          "matchingColumns": [],
+          "schema": [],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        1376,
+        0
+      ],
+      "id": "b75bc954-e034-4085-8ed7-a12b38f82a00",
+      "name": "Call '02_Matching_Smart_Judge'"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "poll-portal",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -144,
+        0
+      ],
+      "id": "592d7d68-899c-42a9-bc10-5ae4b7f2ec53",
+      "name": "Webhook",
+      "webhookId": "9b9d4e9c-44c6-405a-8d19-8f036f7ad69f"
+    },
+    {
+      "parameters": {
+        "resource": "fileFolder",
+        "searchMethod": "query",
+        "queryString": "=",
+        "filter": {
+          "folderId": {
+            "__rl": true,
+            "value": "1wxSginHaOrjEzb4KxeR5h9UZChKDPoue",
+            "mode": "id"
+          },
+          "whatToSearch": "files",
+          "includeTrashed": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        16,
+        0
+      ],
+      "id": "2d9c4563-188e-46e1-8938-6684ff98fa51",
+      "name": "Search files and folders",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lSw2kca5NYlWFFag",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the text output from the LLM\nconst text = $input.item.json.text || \"\";\n\n// Clean up markdown code blocks if present\nconst cleanJson = text.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\n\ntry {\n  // Parse the string into a real object\n  return JSON.parse(cleanJson);\n} catch (error) {\n  // Fallback if parsing fails\n  return { error: \"Failed to parse JSON\", raw: text };\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        832,
+        0
+      ],
+      "id": "3c3987e1-d17c-43df-b91a-8e47b1cb3adf",
+      "name": "Code in JavaScript"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Drive Trigger": {
+      "main": [
+        []
+      ]
+    },
+    "Run Tesseract OCR (Code Node)": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Download file": {
+      "main": [
+        [
+          {
+            "node": "Run Tesseract OCR (Code Node)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Move file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Move file": {
+      "main": [
+        [
+          {
+            "node": "Call '02_Matching_Smart_Judge'",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Search files and folders",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Search files and folders": {
+      "main": [
+        [
+          {
+            "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call '02_Matching_Smart_Judge'": {
+      "main": [
+        []
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  },
+  "versionId": "529000a1-c870-4d82-8537-f005d68e58b5",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "d6710e9f15c70882d98afad91b3f6139fc5da765f9731179deba30590d41a06c"
+  },
+  "id": "xf1PHk8XMm28nyWI",
+  "tags": []
+}
