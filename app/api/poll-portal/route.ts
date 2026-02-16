@@ -3,6 +3,13 @@ import { NextResponse } from 'next/server'
 export async function POST() {
     const webhookUrl = process.env.N8N_INGESTION_WEBHOOK_URL
 
+    console.log('Poll Portal API Triggered')
+    console.log('ENV DEBUG CHECK:', {
+        hasUrl: !!webhookUrl,
+        urlLength: webhookUrl?.length,
+        NODE_ENV: process.env.NODE_ENV
+    })
+
     if (!webhookUrl) {
         console.error('N8N_INGESTION_WEBHOOK_URL is not configured')
         return NextResponse.json(

@@ -30,11 +30,15 @@ export default async function Dashboard() {
     .order('created_at', { ascending: false })
 
   // FALLBACK: Use Mock Data if DB is empty or fails
+  // FALLBACK: Use Mock Data if DB is empty or fails
+  // Commented out to prevent "ghost data" when starting fresh
+  /*
   if (error || !invoices || invoices.length === 0) {
     const { getInvoices } = await import('@/lib/data/mock-invoices');
     invoices = await getInvoices() as any;
     error = null;
   }
+  */
 
   // Calculate generic stats
   const totalInvoices = invoices?.length || 0;
