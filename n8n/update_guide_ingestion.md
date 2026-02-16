@@ -12,7 +12,7 @@ Follow these steps to update your ingestion workflow for robust data extraction 
 - **Action:** Set `Resource` to `File` and `Operation` to `Download`.
 - **File ID:** Use an expression: `{{ $json.id }}` (this pulls from the Trigger).
 
-## 2. Gemini Parser (Prompt Update)
+## 2. Basic LLM Chain (Prompt Update)
 - **Goal:** Ensure JSON output is strictly formatted.
 - **Prompt Update:** Replace your existing prompt with this:
 ```text
@@ -34,23 +34,30 @@ IMPORTANT: RETURN ONLY THE JSON OBJECT. NO MARKDOWN BACKTICKS. NO DISCOUSE.
 Example: {"invoice_number": "INV-123", ...}
 ```
 
-## 3. Save to Supabase (Idempotency & Mapping)
-- **Goal:** Use "Upsert" to prevent duplicates and link the File ID.
-- **Action:**
-  - **Operation:** Change from `Insert` to `Upsert`.
-  - **On Conflict Column:** Set to `google_file_id`.
-  - **Mapping:** Update the columns to:
-    - `invoice_number`: `{{ $json.invoice_number }}`
-    - `po_reference`: `{{ $json.po_reference }}`
-    - `vendor_name_extracted`: `{{ $json.vendor_name }}`
-    - `total_amount`: `{{ $json.total_amount }}`
-    - `google_file_id`: `{{ $node["Google Drive Trigger"].json["id"] }}`
-    - `status`: `PROCESSING`
+## 3. Save to Supabase (Idempotency Workaround)
+- **Problem:** If your n8n version lacks the `Upsert` operation, we will use a "Get then Branch" logic.
+- **Steps:**
+  1. **Add a Supabase Node (Get):** Before saving, use `Operation: Get` to search table `invoices` where `google_file_id` equals `{{ $node["Google Drive Trigger"].json["id"] }}`.
+  2. **Add an IF Node:** Check if the previous node returned any results (`{{ $node["Supabase Get"].json["id"] }}` is not empty).
+  3. **True Branch (Update):** Connect to a Supabase node with `Operation: Update`. Set `Row ID` to the one found in step 1.
+  4. **False Branch (Create):** Connect to your existing Supabase node with `Operation: Create`.
+
+**Mapping for Create/Update:**
+- `invoice_number`: `{{ $json.invoice_number }}`
+- `po_reference`: `{{ $json.po_reference }}`
+- `vendor_name_extracted`: `{{ $json.vendor_name }}`
+- `total_amount`: `{{ $json.total_amount }}`
+- `google_file_id`: `{{ $node["Google Drive Trigger"].json["id"] }}`
+- `status`: `PROCESSING`
+
+> [!TIP]
+> Alternatively, if you have the **PostgreSQL** node installed, you can use a single node with this SQL command:
+> `INSERT INTO invoices (invoice_number, po_reference, vendor_name_extracted, total_amount, google_file_id, status) VALUES ('{{ $json.invoice_number }}', '{{ $json.po_reference }}', '{{ $json.vendor_name }}', {{ $json.total_amount }}, '{{ $node["Google Drive Trigger"].json["id"] }}', 'PROCESSING') ON CONFLICT (google_file_id) DO UPDATE SET updated_at = NOW();`
 
 ## 4. NEW NODE: Move Processed File
 - **Goal:** Clean up the inbox.
-- **Action:** Add a **Google Drive** node after "Save to Supabase".
+- **Action:** Add a **Google Drive** node at the very end.
   - **Resource:** `File`
   - **Operation:** `Update`
   - **File ID:** `{{ $node["Google Drive Trigger"].json["id"] }}`
-  - **Parent IDs:** Delete the inbox folder ID and add `10_Y_bu9Cz99MataERG6ylQEi6Zec7Ht-` (your Processed folder).
+  - **Parent IDs:** Set to `10_Y_bu9Cz99MataERG6ylQEi6Zec7Ht-` (your Processed folder).
