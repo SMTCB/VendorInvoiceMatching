@@ -51,8 +51,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        560,
-        0
+        -16,
+        -304
       ],
       "alwaysOutputData": true,
       "executeOnce": true,
@@ -83,8 +83,8 @@
       "type": "n8n-nodes-base.supabase",
       "typeVersion": 1,
       "position": [
-        720,
-        0
+        208,
+        -304
       ],
       "alwaysOutputData": true,
       "executeOnce": true,
@@ -187,14 +187,14 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are an expert Accounts Payable Controller. Your job is to compare an INVOICE (JSON) against a PURCHASE ORDER (JSON).\n\n**STRICT RULES:**\n1. Tolerance is 0% UNLESS a specific Exception Rule applies.\n2. Check Unit Price: Invoice Price vs PO Price.\n3. Check Quantity: Invoice Qty vs PO Qty.\n\n**EXCEPTION RULES:**\n{{ JSON.stringify($(\"Fetch Rules\").all().map(i => i.json)) }}\n\n**LEARNING EXAMPLES:**\n{{ JSON.stringify($(\"Fetch Examples\").all().map(i => i.json)) }}\n\n**INVOICE DATA:**\n{{ JSON.stringify($(\"Get Processing Invoices\").item) }}\n\n**PO DATA:**\n{{ JSON.stringify($(\"Fetch PO Lines\").item) }}\n\n**OUTPUT JSON ONLY:**\n{\n  \"status\": \"READY_TO_POST\" | \"BLOCKED_PRICE\" | \"BLOCKED_QTY\" | \"AWAITING_INFO\",\n  \"exception_reason\": \"string explaining the error or null\",\n  \"confidence\": 0-100\n}",
+        "text": "==You are an expert Accounts Payable Controller. Your task is to perform a Three-Way Match: compare the extracted INVOICE against the SAP Purchase Order (PO) data.\n\n**YOUR OBJECTIVE:**\nDecide if the invoice is \"READY_TO_POST\" or if it should be \"BLOCKED\" due to price or quantity variances.\n\n**INPUT DATA:**\n1. **CURRENT INVOICE:** {{ JSON.stringify($json) }}\n2. **SAP PO LINES:** {{ JSON.stringify($(\"Fetch PO Lines\").all().map(i => i.json)) }}\n3. **BUSINESS RULES:** {{ JSON.stringify($(\"Fetch Rules\").all().map(i => i.json)) }}\n4. **HISTORICAL EXAMPLES:** {{ JSON.stringify($(\"Fetch Examples\").all().map(i => i.json)) }}\n\n**MATCHING LOGIC:**\n- Default tolerance is 0%.\n- Price Rule: Invoice Unit Price must match PO Unit Price.\n- Quantity Rule: Invoice Qty must be less than or equal to PO Open Qty.\n- Rule Exception: If a \"Validation Rule\" or \"Exception\" exists in the prompt that allows a variance, follow that rule (Priority 1).\n- Historical Exception: If the \"Historical Examples\" show a similar discrepancy was approved for this vendor previously, you may consider it valid (Priority 2).\n\n**TRACEABILITY (MANDATORY):**\nIn the `audit_trail` field, you must explain your logic. If you approve an invoice with a discrepancy, cite the specific Rule name or Historical Example. If you block it, state specifically: \"Blocked Price on Item X (Inv: $10 vs PO: $9.50)\".\n\n**OUTPUT JSON ONLY:**\n{\n  \"status\": \"READY_TO_POST\" | \"BLOCKED_PRICE\" | \"BLOCKED_QTY\" | \"AWAITING_INFO\",\n  \"exception_reason\": \"Technical summary of variance or null\",\n  \"audit_trail\": \"Explain your decision and which rules/history were applied here.\",\n  \"confidence\": 0-100\n}",
         "batching": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
       "typeVersion": 1.9,
       "position": [
-        896,
-        16
+        912,
+        0
       ],
       "id": "69f4a5dc-7ced-412d-9b9f-a35cca656328",
       "name": "Basic LLM Chain"
@@ -254,17 +254,61 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE invoices\nSET \n  status = '{{ $json.status }}',\n  exception_reason = '{{ $json.exception_reason }}',\n  updated_at = NOW()\nWHERE id = '{{ $item(0).$node[\"Get Processing Invoices\"].json[\"id\"] }}';",
+        "query": "UPDATE invoices\nSET \n  status = '{{ $json.status }}',\n  exception_reason = '{{ $json.exception_reason }}',\n  audit_trail = '{{ $json.audit_trail }}',\n  updated_at = NOW()\nWHERE id = '{{ $node[\"Get Processing Invoices\"].json[\"id\"] }}';",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        1472,
-        16
+        1440,
+        0
       ],
       "id": "6d814dd8-1ca7-4c98-9b51-64bb118f4882",
       "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "zd9tE1ckuHzwYrry",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * \nFROM validator_rules \nWHERE is_active = true \nAND (\n  -- Fuzzy Match: If invoice vendor contains the Rule name (e.g. 'Google Inc' contains 'Google')\n  (condition_field = 'vendor_name' AND '{{ $node[\"Get Processing Invoices\"].json[\"vendor_name_extracted\"] }}' ILIKE '%' || value || '%')\n  OR\n  -- Also fetch global rules that aren't tied to a specific vendor (e.g. High Value checks)\n  (condition_field != 'vendor_name')\n);",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        0
+      ],
+      "id": "a4673a6c-aadd-410c-aaab-7da19f9d6170",
+      "name": "Fetch Rules1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "zd9tE1ckuHzwYrry",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT * \nFROM ai_learning_examples \nWHERE \n  -- Fuzzy Match: Find history where the stored vendor name is similar to current invoice\n  (vendor_name ILIKE '%' || split_part('{{ $node[\"Get Processing Invoices\"].json[\"vendor_name_extracted\"] }}', ' ', 1) || '%')\n  OR\n  (vendor_name ILIKE '%' || '{{ $node[\"Get Processing Invoices\"].json[\"vendor_name_extracted\"] }}' || '%')\nORDER BY created_at DESC\nLIMIT 3;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        720,
+        0
+      ],
+      "id": "657c500d-847e-4b0f-8b27-aabd798892b4",
+      "name": "Fetch Examples1",
+      "alwaysOutputData": true,
       "credentials": {
         "postgres": {
           "id": "zd9tE1ckuHzwYrry",
@@ -279,7 +323,7 @@
       "main": [
         [
           {
-            "node": "Fetch Rules",
+            "node": "Fetch Rules1",
             "type": "main",
             "index": 0
           }
@@ -288,13 +332,7 @@
     },
     "Fetch Rules": {
       "main": [
-        [
-          {
-            "node": "Fetch Examples",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Switch": {
@@ -332,13 +370,7 @@
     },
     "Fetch Examples": {
       "main": [
-        [
-          {
-            "node": "Basic LLM Chain",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        []
       ]
     },
     "Google Gemini Chat Model": {
@@ -384,6 +416,28 @@
           }
         ]
       ]
+    },
+    "Fetch Rules1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Examples1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Examples1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": true,
@@ -394,7 +448,7 @@
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
   },
-  "versionId": "9255e17f-191b-42ad-a072-8343c8d0fecc",
+  "versionId": "339dd7ff-5cd3-4b1b-9ae2-f7ead8ac9f54",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "d6710e9f15c70882d98afad91b3f6139fc5da765f9731179deba30590d41a06c"
