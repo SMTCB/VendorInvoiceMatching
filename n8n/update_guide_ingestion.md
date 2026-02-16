@@ -35,9 +35,32 @@ Example: {"invoice_number": "INV-123", ...}
 ```
 
 ## 3. Save to Supabase (THE BEST WAY: PostgreSQL Node)
-- **Why:** Your n8n version lacks the "Upsert" operation. Using branching (IF nodes) is very error-prone with UUIDs. The **PostgreSQL** node is much faster and more robust.
-- **Node:** Add a **PostgreSQL** node after the **Basic LLM Chain**.
+- **Why:** Your n8n version lacks the "Upsert" operation. Branches (IF nodes) are error-prone.
+- **Node to ADD:** Add a **PostgreSQL** node.
+
+### 🛑 NODES TO DELETE:
+Delete these four nodes to clean up your workflow:
+1. **Get a row**
+2. **If**
+3. **Update Supabase**
+4. **Save Supabase** (Create)
+
+### 🔗 NEW CONNECTIONS:
+- **PREVIOUS NODE:** Connect the output of **Basic LLM Chain** to the **PostgreSQL** node.
+- **NEXT NODE:** Connect the output of the **PostgreSQL** node to the **Move file** node.
+
+### ⚙️ PostgreSQL CONFIG:
 - **Operation:** `Execute Query`
+- **Credentials:** Create a new **PostgreSQL** credential.
+- **Mapping from Supabase:**
+  Go to your **Supabase Dashboard** -> **Project Settings** -> **Database**. Use these values:
+  - **Host:** Copy "Host" from Supabase (usually `db.xxx.supabase.co`)
+  - **Database:** `postgres`
+  - **User:** `postgres`
+  - **Port:** `5432`
+  - **Password:** The password you set when creating the project.
+  - **SSL:** Set to **ON** (Required for Supabase).
+
 - **Query:** 
 ```sql
 INSERT INTO invoices (
@@ -62,21 +85,6 @@ DO UPDATE SET
   total_amount = EXCLUDED.total_amount,
   updated_at = NOW();
 ```
-
----
-
-## Alternative: Save to Supabase (Branching Way)
-- **Critial Fix for "UUID undefined" Error:** This error happens if you manually execute the node OR if the IF node sends `undefined` to a UUID field.
-- **Steps:**
-  1. **Get a row Node:** Set "Always Output Data" to ON in Settings.
-  2. **IF Node:** Condition `{{ $node["Get a row"].json["id"] }}` is not empty.
-     - > [!IMPORTANT]
-     - > **NODE NAME:** Must match exactly. Use `$node["Get a row"]`.
-  3. **Update Node (True Branch):** 
-     - Only runs if ID exists.
-     - **Select Conditions:** `id` equals `{{ $node["Get a row"].json["id"] }}`.
-     - > [!CAUTION]
-     - > If you manually click "Execute Step" here while looking at a new invoice, it will fail with "undefined" because `Get a row` has no ID to give! Test with a full workflow run.
 
 ## 4. NEW NODE: Move Processed File
 - **Goal:** Clean up the inbox.
