@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { login, signup } from '@/lib/auth-actions'
 import { Logo } from '@/components/ui/logo'
 import { Loader2, ArrowRight, ShieldCheck, Zap } from 'lucide-react'
@@ -8,19 +9,51 @@ import { cn } from '@/lib/utils'
 
 export default function LoginPage() {
     const [error, setError] = useState<string | null>(null)
+    const [success, setSuccess] = useState<string | null>(null)
     const [loading, setLoading] = useState(false)
     const [mode, setMode] = useState<'signin' | 'signup'>('signin')
+
+    const router = useRouter()
 
     async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
         event.preventDefault()
         setLoading(true)
         setError(null)
+        setSuccess(null)
 
         const formData = new FormData(event.currentTarget)
-        const result = mode === 'signin' ? await login(formData) : await signup(formData)
+        const email = formData.get('email')
 
-        if (result?.error) {
-            setError(result.error)
+        console.log(`[Auth] Attempting ${mode} for:`, email)
+
+        try {
+            const result = mode === 'signin' ? await login(formData) : await signup(formData)
+            console.log('[Auth] Result:', result)
+
+            if (result && 'error' in result && result.error) {
+                console.warn('[Auth] Error:', result.error)
+                setError(result.error)
+                setLoading(false)
+            } else if (result && 'message' in result && result.message) {
+                console.log('[Auth] Message:', result.message)
+                setSuccess(result.message)
+                setLoading(false)
+            } else if (result && 'success' in result && result.success) {
+                console.log('[Auth] Success! Redirecting to:', result.redirectUrl)
+                setSuccess('Success! Redirecting...')
+                if (result.redirectUrl) {
+                    router.push(result.redirectUrl)
+                    router.refresh()
+                }
+                // Don't set loading to false here so button stays disabled during navigation
+            } else {
+                console.warn('[Auth] Unexpected result shape:', result)
+                setError('An unexpected error occurred. Please try again.')
+                setLoading(false)
+            }
+        } catch (e) {
+            console.error('[Auth] Caught Exception:', e)
+            setError('System error. Check console for details.')
             setLoading(false)
         }
     }
@@ -80,6 +113,12 @@ export default function LoginPage() {
                         {error && (
                             <div className="p-3 rounded-xl bg-red-50 border border-red-100 text-red-600 text-[11px] font-bold uppercase tracking-tight flex items-center gap-2 animate-in slide-in-from-top-1">
                                 <Zap size={14} /> {error}
+                            </div>
+                        )}
+
+                        {success && (
+                            <div className="p-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-600 text-[11px] font-bold uppercase tracking-tight flex items-center gap-2 animate-in slide-in-from-top-1">
+                                <ShieldCheck size={14} /> {success}
                             </div>
                         )}
 
