@@ -109,12 +109,18 @@ DO UPDATE SET
   - **Workflow ID:** Select **02_Matching_Smart_Judge**.
   
   > [!IMPORTANT]
-  > **CAN'T SEE WORKFLOW 2?** 
-  > For a workflow to appear in this list, it **must** start with an **Execute Workflow Trigger** node. 
-  > 1. Go to **02_Matching_Smart_Judge**.
-  > 2. Add the **Execute Workflow Trigger** node and **connect it** to the **Get Processing Invoices** node (you'll have two triggers connected to it: Schedule and Execute Workflow).
-  > 3. **Save** the workflow.
-  > 4. Go back to Workflow 1. Click "Refresh" or re-open the node, and it will show up in the list!
+  > **CAN'T SEE WORKFLOW 2? (CHOOSE THE RIGHT NODE)** 
+  > There are two nodes with similar names. You **must** use the **Trigger** version in Workflow 2.
+  > 
+  > 1. In **02_Matching_Smart_Judge**:
+  >    - **DELETE** the "Execute Workflow" node (the one with the arrow pointing into a bracket `->]`). That is for *calling* other workflows.
+  >    - **ADD** the **Execute Workflow Trigger** node (the one that looks like a play button in a circle). This node has **ZERO parameters** to fill in—it just acts as an entry point.
+  >    - **Connect it** to the **Get Processing Invoices** node.
+  >    - **Save** the workflow.
+  > 
+  > 2. In **Workflow 1 (Ingestion)**:
+  >    - Keep the **Execute Workflow** node (the Action node). 
+  >    - Now, when you search for "02_Matching_Smart_Judge", it will appear because the trigger is present!
 
   **Execute Workflow Node Settings:**
   - **Source:** Choose **Local** (if available) or keep **Database**.
