@@ -15,7 +15,8 @@ import {
     ArrowRight,
     ArrowLeft,
     AlertTriangle,
-    Save
+    Save,
+    Info
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
