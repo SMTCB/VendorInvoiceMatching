@@ -35,6 +35,33 @@ type InvoiceDetailViewProps = {
 
 export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) {
     const [activeTab, setActiveTab] = useState<'matching' | 'copilot'>('matching');
+    const [inquiryNote, setInquiryNote] = useState('');
+
+    const handleSendInquiry = async () => {
+        if (!window.confirm('Send inquiry email to vendor?')) return;
+        try {
+            // PO: Trigger n8n Webhook
+            const response = await fetch('YOUR_N8N_INQUIRY_WEBHOOK_URL', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    invoice_id: invoice.id,
+                    invoice_number: invoice.invoice_number,
+                    vendor: invoice.vendor_name_extracted,
+                    reason: invoice.exception_reason,
+                    custom_note: inquiryNote
+                })
+            });
+            if (response.ok) {
+                alert('Inquiry sent successfully!');
+                setInquiryNote('');
+            } else {
+                alert('Demo: Inquiry email trigger simulated successfully.');
+            }
+        } catch (e) {
+            alert('Demo: Inquiry email trigger simulated successfully.');
+        }
+    };
 
     return (
         <div className="flex flex-col h-screen overflow-hidden bg-slate-50">
@@ -61,14 +88,7 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
 
                 <div className="flex items-center gap-3">
                     <button
-                        onClick={async () => {
-                            if (!window.confirm('Send inquiry email to vendor?')) return;
-                            try {
-                                alert('Demo: Inquiry email trigger simulated successfully.');
-                            } catch (e) {
-                                alert('Demo: Inquiry email trigger simulated successfully.');
-                            }
-                        }}
+                        onClick={handleSendInquiry}
                         className="px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors shadow-sm"
                     >
                         Send to Inquiry
@@ -89,11 +109,12 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                 </div>
             </header>
 
+
             {/* Main Split View */}
-            <div className="flex-1 flex overflow-hidden">
+            < div className="flex-1 flex overflow-hidden" >
 
                 {/* Left Panel: PDF Viewer */}
-                <div className="w-1/2 bg-slate-100 border-r border-slate-200 flex flex-col relative">
+                < div className="w-1/2 bg-slate-100 border-r border-slate-200 flex flex-col relative" >
                     <div className="bg-slate-800 text-white text-xs px-4 py-2 flex items-center justify-between">
                         <span className="font-medium flex items-center gap-2"><FileText size={14} /> Original Document</span>
                         <a href={invoice.pdf_link || '#'} target="_blank" rel="noopener noreferrer" className="hover:text-blue-300 flex items-center gap-1">
@@ -108,13 +129,13 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                             <a href={invoice.pdf_link} target="_blank" className="text-blue-600 text-sm hover:underline mt-4">Download PDF</a>
                         </div>
                     </div>
-                </div>
+                </div >
 
                 {/* Right Panel: Tabs & Content */}
-                <div className="w-1/2 bg-white flex flex-col overflow-hidden">
+                < div className="w-1/2 bg-white flex flex-col overflow-hidden" >
 
                     {/* Tabs */}
-                    <div className="flex border-b border-slate-200 bg-slate-50/50">
+                    < div className="flex border-b border-slate-200 bg-slate-50/50" >
                         <button
                             onClick={() => setActiveTab('matching')}
                             className={cn(
@@ -139,10 +160,10 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                             <Wand2 size={16} />
                             AI Copilot
                         </button>
-                    </div>
+                    </div >
 
                     {/* Tab Content */}
-                    <div className="flex-1 overflow-y-auto">
+                    < div className="flex-1 overflow-y-auto" >
 
                         {activeTab === 'matching' ? (
                             <div className="flex flex-col h-full">
@@ -159,16 +180,32 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                                     {invoice.exception_reason || 'The system detected discrepancies between the Invoice and Purchase Order.'}
                                                 </p>
 
-                                                <button
-                                                    onClick={() => alert(`Demo: Logic "${invoice.exception_reason}" saved to ai_learning_examples table for future reinforcement.`)}
-                                                    className="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1.5"
-                                                >
-                                                    <CheckCircle size={12} />
-                                                    Save to Knowledge Base
-                                                </button>
-                                                <span className="text-xs text-amber-700/70 font-medium">
-                                                    AI Confidence: 98%
-                                                </span>
+                                                <div className="mt-4 p-3 bg-white/50 rounded-lg border border-amber-200">
+                                                    <label className="text-[10px] font-bold text-amber-900 uppercase tracking-wider mb-1 block">Custom Inquiry Note</label>
+                                                    <textarea
+                                                        value={inquiryNote}
+                                                        onChange={(e) => setInquiryNote(e.target.value)}
+                                                        placeholder="Type a message for the vendor (e.g., Please clarify why the unit price increased to $600)..."
+                                                        className="w-full text-sm bg-white border border-amber-200 rounded p-2 focus:ring-1 focus:ring-amber-500 focus:border-amber-500 outline-none min-h-[80px] text-amber-900"
+                                                    />
+                                                </div>
+
+                                                <div className="mt-3 flex items-center gap-3">
+                                                    <button
+                                                        onClick={handleSendInquiry}
+                                                        className="text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1.5 shadow-sm"
+                                                    >
+                                                        <ExternalLink size={12} />
+                                                        Send Inquiry Email
+                                                    </button>
+                                                    <button
+                                                        onClick={() => alert(`Demo: Logic "${invoice.exception_reason}" saved to ai_learning_examples table for future reinforcement.`)}
+                                                        className="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1.5"
+                                                    >
+                                                        <CheckCircle size={12} />
+                                                        Save to Knowledge Base
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -230,12 +267,13 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                     exceptionReason={invoice.exception_reason}
                                 />
                             </div>
-                        )}
+                        )
+                        }
 
-                    </div>
-                </div>
-            </div>
-        </div>
+                    </div >
+                </div >
+            </div >
+        </div >
     )
 }
 
