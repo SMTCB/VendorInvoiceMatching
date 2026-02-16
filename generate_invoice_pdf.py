@@ -20,11 +20,11 @@ def create_invoice(filename):
     
     # Vendor Info
     pdf.set_font('Arial', 'B', 12)
-    pdf.cell(0, 10, 'TechParts Ltd', 0, 1)
+    pdf.cell(0, 10, 'TechGap Solutions', 0, 1)
     pdf.set_font('Arial', '', 10)
-    pdf.cell(0, 5, '123 Silicon Valley Blvd', 0, 1)
-    pdf.cell(0, 5, 'San Jose, CA 94000', 0, 1)
-    pdf.cell(0, 5, 'billing@techparts.com', 0, 1)
+    pdf.cell(0, 5, '789 Innovation Way', 0, 1)
+    pdf.cell(0, 5, 'Brick City, NY 10001', 0, 1)
+    pdf.cell(0, 5, 'billing@techgap.solutions', 0, 1)
     
     pdf.ln(10)
     
@@ -33,12 +33,12 @@ def create_invoice(filename):
     pdf.set_font('Arial', 'B', 10)
     pdf.cell(50, 8, 'Invoice Number:', 1, 0, 'L', 1)
     pdf.set_font('Arial', '', 10)
-    pdf.cell(50, 8, 'INV-2026-001', 1, 1, 'L')
+    pdf.cell(50, 8, 'INV-LEGO-789', 1, 1, 'L')
     
     pdf.set_font('Arial', 'B', 10)
     pdf.cell(50, 8, 'Date:', 1, 0, 'L', 1)
     pdf.set_font('Arial', '', 10)
-    pdf.cell(50, 8, '2026-02-14', 1, 1, 'L')
+    pdf.cell(50, 8, '2026-02-16', 1, 1, 'L')
     
     pdf.set_font('Arial', 'B', 10)
     pdf.cell(50, 8, 'PO Reference:', 1, 0, 'L', 1)
@@ -57,17 +57,22 @@ def create_invoice(filename):
     
     # Line Items
     pdf.set_font('Arial', '', 10)
-    pdf.cell(80, 10, 'Gaming Laptop Pro X', 1, 0, 'L')
-    pdf.cell(30, 10, '10', 1, 0, 'C')
-    pdf.cell(40, 10, '$1,200.00', 1, 0, 'R')
-    pdf.cell(40, 10, '$12,000.00', 1, 1, 'R')
+    pdf.cell(80, 10, 'Lego Millenium Falcon (75192)', 1, 0, 'L')
+    pdf.cell(30, 10, '1', 1, 0, 'C')
+    pdf.cell(40, 10, '$849.99', 1, 0, 'R')
+    pdf.cell(40, 10, '$849.99', 1, 1, 'R')
+    
+    pdf.cell(80, 10, 'Lego Death Star (10188)', 1, 0, 'L')
+    pdf.cell(30, 10, '1', 1, 0, 'C')
+    pdf.cell(40, 10, '$499.99', 1, 0, 'R')
+    pdf.cell(40, 10, '$499.99', 1, 1, 'R')
     
     pdf.ln(5)
     
     # Totals
     pdf.set_font('Arial', 'B', 10)
     pdf.cell(150, 10, 'Subtotal', 0, 0, 'R')
-    pdf.cell(40, 10, '$12,000.00', 1, 1, 'R')
+    pdf.cell(40, 10, '$1,349.98', 1, 1, 'R')
     
     pdf.cell(150, 10, 'Tax (0%)', 0, 0, 'R')
     pdf.cell(40, 10, '$0.00', 1, 1, 'R')
@@ -75,11 +80,12 @@ def create_invoice(filename):
     pdf.set_font('Arial', 'B', 12)
     pdf.cell(150, 10, 'Total Amount', 0, 0, 'R')
     pdf.set_fill_color(220, 255, 220)
-    pdf.cell(40, 10, '$12,000.00', 1, 1, 'R', 1)
+    pdf.cell(40, 10, '$1,349.98', 1, 1, 'R', 1)
     
     pdf.ln(20)
     pdf.set_font('Arial', 'I', 10)
-    pdf.cell(0, 10, 'Please pay within 30 days. Thank you for your business!', 0, 1, 'C')
+    pdf.cell(0, 10, 'Thank you for your business!', 0, 1, 'C')
+
 
     pdf.output(filename)
     print(f"Successfully generated {filename}")

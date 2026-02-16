@@ -1,34 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  /* Enterprise Palette - Deep Blue & Slate */
-  --background: #f8f9fa;
-  /* Light Grey Background for reduced eye strain */
-  --foreground: #1e293b;
-  /* Slate-900 for text */
+  /* Premium Enterprise Palette - Brand Aligned */
+  --background: #fdfdfe;
+  --foreground: #0f172a;
+  /* Slate 900 - Deep Navy for text */
+
+  --brand-navy: #0f172a;
+  --brand-blue: #2563eb;
+  --brand-cyan: #06b6d4;
 
   --primary: #0f172a;
-  /* Slate 900 - Strong, Corporate */
   --primary-foreground: #ffffff;
 
   --secondary: #06b6d4;
-  /* Cyan 500 - AI Accent */
   --secondary-foreground: #ffffff;
 
-  --muted: #64748b;
-  /* Slate 500 - Subtitles */
-  --border: #e2e8f0;
-  /* Slate 200 - Borders */
+  --accent-light: #f1f5f9;
+  --accent-hover: #e2e8f0;
 
-  /* Semantic Status Colors */
-  --status-success: #10b981;
-  /* Emerald 500 */
-  --status-warning: #f59e0b;
-  /* Amber 500 */
-  --status-error: #ef4444;
-  /* Red 500 */
-  --status-info: #0ea5e9;
-  /* Sky 500 */
+  --muted: #64748b;
+  --border: #e2e8f0;
+
+  /* Premium Gradients */
+  --grad-brand: linear-gradient(135deg, #0f172a 0%, #2563eb 100%);
+  --grad-premium: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  --grad-ai: linear-gradient(135deg, #06b6d4 0%, #3b82f6 100%);
+
+  /* Semantic Status Colors (Premium) */
+  --status-success: #059669;
+  /* Emerald 600 */
+  --status-warning: #d97706;
+  /* Amber 600 */
+  --status-error: #dc2626;
+  /* Red 600 */
+  --status-info: #0284c7;
+  /* Sky 600 */
 }
 
 @theme inline {
@@ -41,8 +48,11 @@
   --color-muted: var(--muted);
   --color-border: var(--border);
 
+  --color-brand-navy: var(--brand-navy);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-cyan: var(--brand-cyan);
+
   --font-sans: var(--font-inter);
-  /* Switched to Inter */
 }
 
 body {

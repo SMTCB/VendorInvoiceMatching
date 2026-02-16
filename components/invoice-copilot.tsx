@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useRef } from 'react'
-import { Send, Bot, User, RefreshCw, Paperclip, ChevronRight, Wand2 } from 'lucide-react'
+import { Send, Bot, User, RefreshCw, Paperclip, ChevronRight, Wand2, Zap, ShieldCheck } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 type Message = {
@@ -24,7 +24,7 @@ export function InvoiceCopilot({ invoiceNumber, vendorName, status, exceptionRea
         {
             id: '1',
             role: 'assistant',
-            content: `Hello! I'm your AP Copilot. I've analyzed invoice **${invoiceNumber}** from **${vendorName}**.\n\nIt is currently **${status.replace(/_/g, ' ')}**. How can I help you?`,
+            content: `Master Intelligence active for Invoice **${invoiceNumber || 'PENDING'}**.\n\nI've cross-referenced vendor **${vendorName || 'IDENTIFIED'}** against current ERP records. Currently flagged as **${status?.replace(/_/g, ' ') || 'PROCESSING'}**.\n\nHow can I assist with your audit today?`,
             timestamp: new Date()
         }
     ]);
@@ -68,66 +68,69 @@ export function InvoiceCopilot({ invoiceNumber, vendorName, status, exceptionRea
 
     const handleQuickAction = (action: string) => {
         setInput(action);
-        // Optional: Auto-send or just populate
     };
 
-    // Helper to clean up formatting for display
     const formatTime = (date: Date) => {
         return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     };
 
     return (
-        <div className="flex flex-col h-full bg-slate-50 border-l border-slate-200">
-            {/* Chat Header */}
-            <div className="p-4 bg-white border-b border-slate-200 flex items-center justify-between shadow-sm z-10">
-                <div className="flex items-center gap-3">
-                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-2 rounded-lg text-white shadow-md">
-                        <Wand2 size={18} />
+        <div className="flex flex-col h-full bg-[#F8FAFC]">
+            {/* Chat Header - High Tech */}
+            <div className="px-6 py-5 bg-white border-b border-slate-200 flex items-center justify-between shadow-sm z-10 shrink-0">
+                <div className="flex items-center gap-4">
+                    <div className="bg-brand-navy p-2.5 rounded-xl text-brand-cyan shadow-lg shadow-brand-navy/20 relative">
+                        <Wand2 size={20} />
+                        <div className="absolute -top-1 -right-1 w-3 h-3 bg-brand-cyan rounded-full border-2 border-white animate-pulse" />
                     </div>
                     <div>
-                        <h3 className="font-semibold text-slate-900">AP Copilot</h3>
-                        <p className="text-xs text-indigo-600 font-medium flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span>
-                            Online
-                        </p>
+                        <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Master Copilot</h3>
+                        <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[10px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded font-black uppercase tracking-tighter">Secure Engine</span>
+                            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">v2.0 Flash</span>
+                        </div>
                     </div>
                 </div>
                 <button
                     onClick={() => setMessages([messages[0]])}
-                    className="p-2 hover:bg-slate-100 rounded-full text-slate-400 hover:text-slate-600 transition-colors"
-                    title="Reset Chat"
+                    className="p-2 hover:bg-slate-100 rounded-xl text-slate-400 transition-all"
+                    title="Reset Audit Log"
                 >
                     <RefreshCw size={16} />
                 </button>
             </div>
 
             {/* Messages Area */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 scroll-smooth" ref={scrollRef}>
+            <div className="flex-1 overflow-y-auto p-6 space-y-6" ref={scrollRef}>
                 {messages.map((msg) => (
                     <div
                         key={msg.id}
                         className={cn(
-                            "flex gap-3 max-w-[85%]",
+                            "flex gap-4 max-w-[90%]",
                             msg.role === 'user' ? "ml-auto flex-row-reverse" : ""
                         )}
                     >
                         <div className={cn(
-                            "w-8 h-8 rounded-full flex items-center justify-center shrink-0 border shadow-sm",
-                            msg.role === 'assistant' ? "bg-white text-indigo-600 border-indigo-100" : "bg-slate-200 text-slate-600 border-slate-300"
+                            "w-9 h-9 rounded-xl flex items-center justify-center shrink-0 shadow-sm border",
+                            msg.role === 'assistant'
+                                ? "bg-brand-navy text-brand-cyan border-brand-navy/10"
+                                : "bg-white text-slate-600 border-slate-100"
                         )}>
-                            {msg.role === 'assistant' ? <Bot size={16} /> : <User size={16} />}
+                            {msg.role === 'assistant' ? <Bot size={18} /> : <User size={18} />}
                         </div>
 
-                        <div className={cn(
-                            "rounded-2xl p-3 text-sm shadow-sm",
-                            msg.role === 'assistant'
-                                ? "bg-white border border-slate-200 text-slate-800 rounded-tl-none"
-                                : "bg-blue-600 text-white rounded-tr-none"
-                        )}>
-                            <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
+                        <div className="flex flex-col gap-1.5">
+                            <div className={cn(
+                                "rounded-2xl p-4 text-sm font-medium leading-relaxed shadow-sm transition-all",
+                                msg.role === 'assistant'
+                                    ? "bg-white border border-slate-100 text-slate-800 rounded-tl-none"
+                                    : "bg-brand-blue text-white rounded-tr-none shadow-blue-900/10"
+                            )}>
+                                <p className="whitespace-pre-wrap">{msg.content}</p>
+                            </div>
                             <span className={cn(
-                                "text-[10px] block mt-1 opacity-70",
-                                msg.role === 'assistant' ? "text-slate-400" : "text-blue-100"
+                                "text-[10px] font-black uppercase tracking-widest px-1",
+                                msg.role === 'assistant' ? "text-slate-300" : "text-blue-300 ml-auto"
                             )}>
                                 {formatTime(msg.timestamp)}
                             </span>
@@ -136,99 +139,110 @@ export function InvoiceCopilot({ invoiceNumber, vendorName, status, exceptionRea
                 ))}
 
                 {isThinking && (
-                    <div className="flex gap-3 max-w-[85%]">
-                        <div className="w-8 h-8 rounded-full bg-white text-indigo-600 border border-indigo-100 flex items-center justify-center shrink-0 shadow-sm">
-                            <Bot size={16} />
+                    <div className="flex gap-4">
+                        <div className="w-9 h-9 rounded-xl bg-brand-navy text-brand-cyan flex items-center justify-center shrink-0 shadow-sm border border-brand-navy/10">
+                            <Zap size={18} className="animate-pulse" />
                         </div>
-                        <div className="bg-white border border-slate-200 rounded-2xl rounded-tl-none p-3 shadow-sm flex items-center gap-1">
-                            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce"></span>
-                            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.2s]"></span>
-                            <span className="w-1.5 h-1.5 bg-slate-400 rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                        <div className="bg-white border border-white/10 rounded-2xl rounded-tl-none p-4 shadow-sm flex items-center gap-2">
+                            <div className="flex gap-1">
+                                <span className="w-1.5 h-1.5 bg-brand-cyan/40 rounded-full animate-bounce"></span>
+                                <span className="w-1.5 h-1.5 bg-brand-cyan/60 rounded-full animate-bounce [animation-delay:0.2s]"></span>
+                                <span className="w-1.5 h-1.5 bg-brand-cyan rounded-full animate-bounce [animation-delay:0.4s]"></span>
+                            </div>
+                            <span className="text-[10px] font-black text-brand-cyan uppercase tracking-widest ml-2">Crossing ERP...</span>
                         </div>
                     </div>
                 )}
             </div>
 
-            {/* Quick Actions */}
+            {/* Suggested Intelligence Actions */}
             {messages.length === 1 && (
-                <div className="px-4 pb-2">
-                    <p className="text-xs text-slate-400 mb-2 uppercase font-semibold tracking-wider">Suggested Actions</p>
+                <div className="px-6 pb-4">
                     <div className="flex flex-wrap gap-2">
-                        <button
-                            onClick={() => handleQuickAction("Explain the variance")}
-                            className="text-xs bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 px-3 py-1.5 rounded-full transition-colors"
-                        >
-                            Explain variance?
-                        </button>
-                        <button
-                            onClick={() => handleQuickAction("Draft rejection email")}
-                            className="text-xs bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 px-3 py-1.5 rounded-full transition-colors"
-                        >
-                            Draft rejection email
-                        </button>
-                        <button
-                            onClick={() => handleQuickAction("Show vendor history")}
-                            className="text-xs bg-white border border-slate-200 hover:border-indigo-300 hover:text-indigo-600 px-3 py-1.5 rounded-full transition-colors"
-                        >
-                            Vendor history
-                        </button>
+                        <QuickAction
+                            label="Variance Report"
+                            onClick={() => handleQuickAction("Generate a detailed variance report for this invoice.")}
+                        />
+                        <QuickAction
+                            label="Vendor Risk"
+                            onClick={() => handleQuickAction("Analyze vendor reliability history.")}
+                        />
+                        <QuickAction
+                            label="Tax Audit"
+                            onClick={() => handleQuickAction("Verify tax compliance on this document.")}
+                        />
                     </div>
                 </div>
             )}
 
-            {/* Input Area */}
-            <div className="p-4 bg-white border-t border-slate-200">
-                <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 focus-within:ring-2 focus-within:ring-indigo-500/20 focus-within:border-indigo-500 transition-all">
-                    <button className="text-slate-400 hover:text-slate-600 p-1">
-                        <Paperclip size={18} />
+            {/* Input Dashboard */}
+            <div className="p-6 bg-white border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.02)]">
+                <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-brand-blue/10 focus-within:border-brand-blue/30 transition-all group">
+                    <button className="text-slate-400 hover:text-brand-blue p-1 transition-colors">
+                        <Paperclip size={20} />
                     </button>
                     <input
                         type="text"
                         value={input}
                         onChange={(e) => setInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-                        placeholder="Ask Copilot..."
-                        className="flex-1 bg-transparent border-none focus:outline-none text-sm text-slate-800 placeholder:text-slate-400"
+                        placeholder="Inquire auditing assistance..."
+                        className="flex-1 bg-transparent border-none focus:outline-none text-sm font-medium text-slate-800 placeholder:text-slate-400"
                     />
                     <button
                         onClick={handleSend}
                         disabled={!input.trim() || isThinking}
                         className={cn(
-                            "p-1.5 rounded-lg transition-colors",
-                            input.trim() && !isThinking ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-sm" : "bg-slate-200 text-slate-400 cursor-not-allowed"
+                            "p-2 rounded-xl transition-all",
+                            input.trim() && !isThinking ? "bg-brand-navy text-brand-cyan shadow-lg shadow-brand-navy/20 hover:scale-110 active:scale-95" : "bg-slate-200 text-slate-400 cursor-not-allowed"
                         )}
                     >
-                        <Send size={16} />
+                        <Send size={18} />
                     </button>
                 </div>
-                <div className="text-[10px] text-center text-slate-400 mt-2">
-                    AI can make mistakes. Verify important info.
+                <div className="flex items-center justify-center gap-4 mt-4">
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                        <ShieldCheck size={10} className="text-brand-cyan" /> Secure Enterprise AI
+                    </p>
+                    <div className="w-1 h-1 rounded-full bg-slate-200" />
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">LLM Audit Verified</p>
                 </div>
             </div>
         </div>
     )
 }
 
+function QuickAction({ label, onClick }: { label: string, onClick: () => void }) {
+    return (
+        <button
+            onClick={onClick}
+            className="text-[10px] font-black uppercase tracking-widest bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-xl hover:border-brand-blue hover:text-brand-blue transition-all shadow-sm active:scale-95"
+        >
+            {label}
+        </button>
+    )
+}
+
 function generateMockResponse(input: string, context: any): string {
     const lowerInput = input.toLowerCase();
 
-    if (lowerInput.includes('variance') || lowerInput.includes('error') || lowerInput.includes('wrong')) {
+    if (lowerInput.includes('variance') || lowerInput.includes('report') || lowerInput.includes('why')) {
         if (context.status === 'BLOCKED_PRICE') {
-            return `I've analyzed the line items. **Line 10** has a price variance.\n\n- PO Price: **$150.00**\n- Invoice Price: **$160.00**\n\nThe vendor is charging **6.6% more** than the agreed PO rate. This exceeds the 5% tolerance threshold.`;
+            return `### Variance Audit Analysis\n\nI've identified an **Over-Threshold Variance** on Line Item 10.\n\n- **ERP Base Price:** $150.00\n- **Extracted Price:** $160.00\n- **Delta:** +$10.00 (**6.6%**)\n\nThis exceeds the standard enterprise tolerance of 5.0%. Recommendation: Initiate Vendor Inquiry to reconcile before posting.`;
         } else if (context.status === 'BLOCKED_QTY') {
-            return `It looks like a quantity mismatch on **Line 10**.\n\n- Ordered: **1 unit**\n- Invoiced: **2 units**\n\nWe haven't received a Goods Receipt for the extra unit yet.`;
+            return `### Quantity Audit Analysis\n\nI've identified a **Negative Variance** on Line Item 10.\n\n- **PO Quantity:** 1 Unit\n- **Extracted Quantity:** 2 Units\n\nCurrently, the Goods Receipt portal has not authorized this over-delivery. Recommendation: Park invoice until Receipt confirmation is achieved.`;
         } else {
-            return `I don't see any major variances flagged by the system. The totals match the Purchase Order within tolerance.`;
+            return `Audit results indicate **100% compliance** for all line items. All variances are within 0.1% tolerance. Ready for posting.`;
         }
     }
 
-    if (lowerInput.includes('email') || lowerInput.includes('draft') || lowerInput.includes('reject')) {
-        return `Here is a draft rejection email for ${context.vendorName}:\n\n**Subject:** Invoice ${context.invoiceNumber} - Discrepancy Found\n\nDear Accounts Team,\n\nWe cannot process invoice ${context.invoiceNumber} due to a variance:\n\n> ${context.exceptionReason || 'Discrepancy between PO and Invoice'}\n\nPlease issue a credit note or provide a corrected invoice.\n\nRegards,\nAP Team`;
+    if (lowerInput.includes('risk') || lowerInput.includes('history') || lowerInput.includes('vendor')) {
+        return `### Vendor Intelligence Report: ${context.vendorName}\n\n- **Reliability Index:** High (92/100)\n- **Compliance History:** 3 variances in last 50 documents.\n- **Payment Cycle:** Average 1.2 days delay.\n\nThis vendor is considered low risk for price gouging, however, recent shipping delays have been noted in other departments.`;
     }
 
-    if (lowerInput.includes('history') || lowerInput.includes('vendor')) {
-        return `**${context.vendorName}** History (Last 6 Months):\n\n- Total Invoices: **12**\n- Paid on Time: **10**\n- Rejected: **2**\n\nThey generally have clean invoices, but we had a similar price variance issue 2 months ago.`;
+    if (lowerInput.includes('tax') || lowerInput.includes('compliance')) {
+        return `### Tax Compliance Verification\n\n- **Tax ID:** Found & Validated.\n- **VAT Calculation:** 0% (Consistent with PO classification).\n- **Legal Entity:** Matches ERP Master Data.\n\nCompliance score: **Passed**.`;
     }
 
-    return `I can help you with that. I'm trained to analyze invoice discrepancies, check vendor compliance, and assist with processing actions. What specifically would you like to know about invoice ${context.invoiceNumber}?`;
+    return `I am processing your inquiry. I can perform variance audits, risk assessments, and compliance checks on Invoice ${context.invoiceNumber || 'PENDING'}. What specific intelligence do you require?`;
 }
