@@ -44,7 +44,8 @@ Example: {"invoice_number": "INV-123", ...}
      - **SETTINGS (Crucial):** Go to the **Settings** tab of this node and turn **ON** "Always Output Data". This ensures the workflow continues even for new invoices.
   2. **Add an IF Node:** 
      - **Condition:** `{{ $node["Get a row"].json["id"] }}` is not empty.
-     - **Note:** Ensure the node name in the expression matches your "Get" node name (e.g., `Get a row`).
+     - > [!IMPORTANT]
+     - > **NODE NAME MISMATCH:** The name inside `$node["..."]` must *exactly* match the name of the node in your sidebar. If your node is named **"Get a row"**, use that. If it's **"Supabase Get"**, use that.
   3. **True Branch (Update):** Connect to a Supabase node with `Operation: Update`.
      - **Table Name or ID:** `invoices`
      - **Select Type:** `Build Manually`
