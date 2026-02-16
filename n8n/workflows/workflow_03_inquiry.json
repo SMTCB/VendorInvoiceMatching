@@ -1,0 +1,91 @@
+{
+    "name": "03_Inquiry_Webhook",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "invoice-inquiry",
+                "options": {}
+            },
+            "id": "1",
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                100,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "sendTo": "your-email@example.com",
+                "subject": "=Invoice Inquiry: {{ $json.body.invoice_number }}",
+                "message": "=Hi,\n\nWe have a question regarding Invoice {{ $json.body.invoice_number }} from {{ $json.body.vendor }}.\n\nReason for inquiry: {{ $json.body.reason }}\n\nPlease clarify.\n\nBest regards,\nAP Team",
+                "options": {}
+            },
+            "id": "2",
+            "name": "Send Email",
+            "type": "n8n-nodes-base.emailSend",
+            "typeVersion": 1,
+            "position": [
+                300,
+                300
+            ],
+            "credentials": {
+                "smtp": {
+                    "id": "YOUR_SMTP_CREDENTIAL_ID",
+                    "name": "SMTP Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "row",
+                "table": "invoices",
+                "operation": "update",
+                "columns": "status",
+                "matchBy": "id",
+                "id": "={{ $node[\"Webhook\"].json[\"body\"][\"invoice_id\"] }}",
+                "status": "AWAITING_INFO"
+            },
+            "id": "3",
+            "name": "Set Awaiting Info",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                500,
+                300
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+                    "name": "Supabase Account"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Send Email",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Send Email": {
+            "main": [
+                [
+                    {
+                        "node": "Set Awaiting Info",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}

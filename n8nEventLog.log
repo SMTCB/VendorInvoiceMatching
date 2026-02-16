@@ -1,0 +1,2 @@
+{"__type":"$$EventMessageAudit","id":"e813e556-d8a1-46a7-b869-9c623042067d","ts":"2026-02-14T18:29:47.430+00:00","eventName":"n8n.audit.user.login.success","message":"n8n.audit.user.login.success","payload":{"userId":"c4e0c864-1f3a-48ed-b0bb-287ef397eee4","_email":"s.t.c.braganca@gmail.com","_firstName":"Segismundo","_lastName":"Bragança","globalRole":"global:owner","authenticationMethod":"email"}}
+{"__type":"$$EventMessageConfirm","confirm":"e813e556-d8a1-46a7-b869-9c623042067d","ts":"2026-02-14T18:29:47.451+00:00","source":{"id":"0","name":"eventBus"}}

@@ -60,6 +60,25 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                 </div>
 
                 <div className="flex items-center gap-3">
+                    <button
+                        onClick={async () => {
+                            if (!window.confirm('Send inquiry email to vendor?')) return;
+                            try {
+                                alert('Demo: Inquiry email trigger simulated successfully.');
+                            } catch (e) {
+                                alert('Demo: Inquiry email trigger simulated successfully.');
+                            }
+                        }}
+                        className="px-4 py-2 bg-indigo-50 border border-indigo-200 rounded-lg text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors shadow-sm"
+                    >
+                        Send to Inquiry
+                    </button>
+                    <button
+                        onClick={() => alert('Demo: Invoice status updated to "PARKED".')}
+                        className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm transition-colors"
+                    >
+                        Park Invoice
+                    </button>
                     <button className="px-4 py-2 bg-white border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 shadow-sm hover:text-red-600 hover:border-red-200 transition-colors">
                         Reject
                     </button>
@@ -140,18 +159,16 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                                     {invoice.exception_reason || 'The system detected discrepancies between the Invoice and Purchase Order.'}
                                                 </p>
 
-                                                <div className="mt-3 flex items-center gap-3">
-                                                    <button
-                                                        onClick={() => setActiveTab('copilot')}
-                                                        className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1.5"
-                                                    >
-                                                        <Wand2 size={12} />
-                                                        Ask AI to Analyze
-                                                    </button>
-                                                    <span className="text-xs text-amber-700/70 font-medium">
-                                                        AI Confidence: 98%
-                                                    </span>
-                                                </div>
+                                                <button
+                                                    onClick={() => alert(`Demo: Logic "${invoice.exception_reason}" saved to ai_learning_examples table for future reinforcement.`)}
+                                                    className="text-xs bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-3 py-1.5 rounded-md font-medium transition-colors flex items-center gap-1.5"
+                                                >
+                                                    <CheckCircle size={12} />
+                                                    Save to Knowledge Base
+                                                </button>
+                                                <span className="text-xs text-amber-700/70 font-medium">
+                                                    AI Confidence: 98%
+                                                </span>
                                             </div>
                                         </div>
                                     </div>

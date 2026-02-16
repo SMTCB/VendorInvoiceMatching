@@ -1,0 +1,249 @@
+{
+    "name": "02_Matching_Smart_Judge",
+    "nodes": [
+        {
+            "parameters": {
+                "rule": {
+                    "interval": [
+                        {
+                            "field": "minutes",
+                            "minutes": 1
+                        }
+                    ]
+                }
+            },
+            "id": "1",
+            "name": "Schedule",
+            "type": "n8n-nodes-base.scheduleTrigger",
+            "typeVersion": 1,
+            "position": [
+                100,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "resource": "row",
+                "operation": "getAll",
+                "table": "invoices",
+                "returnAll": true,
+                "limit": 10
+            },
+            "id": "8",
+            "name": "Get Processing Invoices",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+                    "name": "Supabase Account"
+                }
+            }
+        },
+        {
+            "parameters": {},
+            "id": "6",
+            "name": "Check PO Reference",
+            "type": "n8n-nodes-base.noOp",
+            "typeVersion": 1,
+            "position": [
+                400,
+                300
+            ]
+        },
+        {
+            "parameters": {
+                "resource": "row",
+                "operation": "getAll",
+                "table": "ekpo",
+                "returnAll": true
+            },
+            "id": "2",
+            "name": "Fetch PO Lines",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                550,
+                300
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+                    "name": "Supabase Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "row",
+                "operation": "getAll",
+                "table": "exception_rules",
+                "returnAll": true,
+                "limit": 50
+            },
+            "id": "3",
+            "name": "Fetch Rules",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                700,
+                300
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+                    "name": "Supabase Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "row",
+                "operation": "getAll",
+                "table": "ai_learning_examples",
+                "returnAll": true,
+                "limit": 20
+            },
+            "id": "7",
+            "name": "Fetch Examples",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+                    "name": "Supabase Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "modelName": "models/gemini-2.0-flash",
+                "prompt": "You are an expert Accounts Payable Controller. Your job is to compare an INVOICE (JSON) against a PURCHASE ORDER (JSON).\n\n**STRICT RULES:**\n1. Tolerance is 0% UNLESS a specific Exception Rule applies.\n2. Check Unit Price: Invoice Price vs PO Price.\n3. Check Quantity: Invoice Qty vs PO Qty.\n\n**EXCEPTION RULES:**\n{{ JSON.stringify($(\"Fetch Rules\").all().map(i => i.json)) }}\n\n**LEARNING EXAMPLES:**\n{{ JSON.stringify($(\"Fetch Examples\").all().map(i => i.json)) }}\n\n**INVOICE DATA:**\n{{ JSON.stringify($(\"Get Processing Invoices\").item) }}\n\n**PO DATA:**\n{{ JSON.stringify($(\"Fetch PO Lines\").item) }}\n\n**OUTPUT JSON ONLY:**\n{\n  \"status\": \"READY_TO_POST\" | \"BLOCKED_PRICE\" | \"BLOCKED_QTY\" | \"AWAITING_INFO\",\n  \"exception_reason\": \"string explaining the error or null\",\n  \"confidence\": 0-100\n}"
+            },
+            "id": "4",
+            "name": "Gemini Judge",
+            "type": "n8n-nodes-base.googleGemini",
+            "typeVersion": 1,
+            "position": [
+                1000,
+                300
+            ],
+            "credentials": {
+                "googleGeminiPaLMApi": {
+                    "id": "YOUR_GEMINI_CREDENTIAL_ID",
+                    "name": "Google Gemini Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "resource": "row",
+                "table": "invoices",
+                "operation": "update",
+                "columns": "status, exception_reason",
+                "matchBy": "id"
+            },
+            "id": "5",
+            "name": "Update Status",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                1150,
+                300
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "YOUR_SUPABASE_CREDENTIAL_ID",
+                    "name": "Supabase Account"
+                }
+            }
+        }
+    ],
+    "connections": {
+        "Schedule": {
+            "main": [
+                [
+                    {
+                        "node": "Get Processing Invoices",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Get Processing Invoices": {
+            "main": [
+                [
+                    {
+                        "node": "Check PO Reference",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Check PO Reference": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch PO Lines",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch PO Lines": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Rules",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Rules": {
+            "main": [
+                [
+                    {
+                        "node": "Fetch Examples",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Fetch Examples": {
+            "main": [
+                [
+                    {
+                        "node": "Gemini Judge",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Gemini Judge": {
+            "main": [
+                [
+                    {
+                        "node": "Update Status",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
