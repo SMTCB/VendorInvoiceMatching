@@ -70,7 +70,7 @@
         {
             "parameters": {
                 "modelName": "models/gemini-2.0-flash",
-                "prompt": "You are a data extractor. \nEXTRACT the following fields from the raw OCR text below and return strictly valid JSON.\n\nFields:\n- invoice_number (string)\n- po_reference (string)\n- vendor_name (string)\n- total_amount (number)\n- invoice_date (YYYY-MM-DD)\n- currency (USD/EUR)\n\nOCR TEXT:\n{{ $json.stdout }}\n\nReturn JSON ONLY. No markdown.",
+                "prompt": "You are an expert AP Auditor. \nEXTRACT the following fields from the raw OCR text below and return strictly valid JSON.\n\nFields:\n- invoice_number (string)\n- po_reference (string)\n- vendor_name (string)\n- total_amount (number)\n- invoice_date (YYYY-MM-DD)\n- currency (USD/EUR)\n\nOCR TEXT:\n{{ $json.stdout }}\n\nIMPORTANT: RETURN ONLY THE JSON OBJECT. NO MARKDOWN BACKTICKS. NO DISCOUSE.\nExample: {\"invoice_number\": \"INV-123\", ...}",
                 "options": {}
             },
             "id": "4",
@@ -90,8 +90,10 @@
         },
         {
             "parameters": {
+                "operation": "upsert",
                 "table": "invoices",
-                "columns": "invoice_number, po_reference, vendor_name_extracted, total_amount, status",
+                "columnToMatchOn": "google_file_id",
+                "columns": "invoice_number, po_reference, vendor_name_extracted, total_amount, google_file_id, status",
                 "options": {}
             },
             "id": "5",
@@ -99,13 +101,42 @@
             "type": "n8n-nodes-base.supabase",
             "typeVersion": 1,
             "position": [
-                900,
+                950,
                 300
             ],
             "credentials": {
                 "supabaseApi": {
                     "id": "YOUR_SUPABASE_CREDENTIAL_ID",
                     "name": "Supabase Account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "operation": "update",
+                "fileId": {
+                    "__rl": true,
+                    "value": "={{ $node[\"Google Drive Trigger\"].json.id }}",
+                    "mode": "id"
+                },
+                "updateFields": {
+                    "parentIds": [
+                        "10_Y_bu9Cz99MataERG6ylQEi6Zec7Ht-"
+                    ]
+                }
+            },
+            "id": "6",
+            "name": "Move Processed File",
+            "type": "n8n-nodes-base.googleDrive",
+            "typeVersion": 3,
+            "position": [
+                1150,
+                300
+            ],
+            "credentials": {
+                "googleDriveOAuth2Api": {
+                    "id": "YOUR_CREDENTIAL_ID",
+                    "name": "Google Drive Account"
                 }
             }
         }
@@ -149,6 +180,17 @@
                 [
                     {
                         "node": "Save to Supabase",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Save to Supabase": {
+            "main": [
+                [
+                    {
+                        "node": "Move Processed File",
                         "type": "main",
                         "index": 0
                     }
