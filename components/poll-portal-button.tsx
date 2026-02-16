@@ -1,10 +1,12 @@
 'use client'
 
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import { Zap, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 export function PollPortalButton() {
+    const router = useRouter()
     const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle')
     const [message, setMessage] = useState('')
 
@@ -26,6 +28,9 @@ export function PollPortalButton() {
 
             setStatus('success')
             setMessage('New invoices arriving!')
+
+            // Trigger a UI refresh to show new data
+            router.refresh()
 
             // Auto reset after 3 seconds
             setTimeout(() => {
