@@ -53,13 +53,22 @@ Delete these four nodes to clean up your workflow:
 - **Operation:** `Execute Query`
 - **Credentials:** Create a new **PostgreSQL** credential.
 - **Mapping from Supabase:**
-  Go to your **Supabase Dashboard** -> **Project Settings** -> **Database**. Use these values:
-  - **Host:** Copy "Host" from Supabase (usually `db.xxx.supabase.co`)
+  Go to your **Supabase Dashboard** -> **Project Settings** -> **Database**. 
+  
+  > [!IMPORTANT]
+  > **CONNECTION METHOD:** Choose **Transaction pooler** (and set Mode to **Session**). 
+  > This is crucial because **Direct connection** is often IPv6-only, which can cause connection errors in n8n. The Transaction pooler provides an IPv4-compatible host.
+
+  Use these values from the **Transaction pooler** section:
+  - **Host:** Copy the host provided (it usually starts with `aws-0-...`)
   - **Database:** `postgres`
   - **User:** `postgres`
-  - **Port:** `5432`
-  - **Password:** The password you set when creating the project.
-  - **SSL:** Set to **ON** (Required for Supabase).
+  - **Port:** `6543` (Note: Pooler usually uses 6543, while Direct uses 5432)
+  - **Password:** Your project password.
+  - **SSL:** Set to **ON**.
+  - **Ignore SSL Issues (Insecure):** Set to **ON**.
+    > [!IMPORTANT]
+    > **SSL FIX:** If you see a "self-signed certificate" error, you **must** toggle "Ignore SSL Issues (Insecure)" to **ON**. This allows n8n to trust Supabase's certificate.
 
 - **Query:** 
 ```sql
@@ -93,3 +102,9 @@ DO UPDATE SET
   - **Operation:** `Move`
   - **File ID:** `{{ $node["Google Drive Trigger"].json["id"] }}`
   - **Parent Folder:** Use `By ID` and set to `10_Y_bu9Cz99MataERG6ylQEi6Zec7Ht-` (your Processed folder).
+
+## 5. NEW NODE: Trigger Matching (Optional for Real-Time)
+- **Goal:** Immediately move to the "Matching" phase without waiting for the 1-minute poller.
+- **Action:** Add an **Execute Workflow** node at the very end.
+  - **Workflow ID:** Select your **Match Invoices (Workflow 2)**.
+  - **Wait for completion:** Turn **OFF** (this keeps the ingestion fast).
