@@ -3,9 +3,14 @@
 Follow these steps to update your ingestion workflow for robust data extraction and duplication prevention.
 
 ## 1. Google Drive Trigger
-- **Goal:** Ensure we track the file ID.
-- **Action:** Open the node and confirm `folderId` is set to your "Inbox" folder.
-- **Keep Output:** Ensure the node outputs the `id` of the file.
+- **Goal:** Watch for new files and capture their unique ID.
+- **Action:** No special setting needed for "Action" or "Output". n8n triggers automatically output the file `id` once they fire.
+- **Reference:** We will use this `id` later in the **Save to Supabase** and **Move Processed File** nodes.
+
+## 2. Download PDF (Regular Google Drive Node)
+- **Goal:** Download the binary content for OCR.
+- **Action:** Set `Resource` to `File` and `Operation` to `Download`.
+- **File ID:** Use an expression: `{{ $json.id }}` (this pulls from the Trigger).
 
 ## 2. Gemini Parser (Prompt Update)
 - **Goal:** Ensure JSON output is strictly formatted.
