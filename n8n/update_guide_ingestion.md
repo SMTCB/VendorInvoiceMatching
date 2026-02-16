@@ -34,45 +34,49 @@ IMPORTANT: RETURN ONLY THE JSON OBJECT. NO MARKDOWN BACKTICKS. NO DISCOUSE.
 Example: {"invoice_number": "INV-123", ...}
 ```
 
-## 3. Save to Supabase (Idempotency Workaround)
-- **Critial Fix:** n8n stops the workflow if a "Get" node finds nothing. We must force it to continue.
+## 3. Save to Supabase (THE BEST WAY: PostgreSQL Node)
+- **Why:** Your n8n version lacks the "Upsert" operation. Using branching (IF nodes) is very error-prone with UUIDs. The **PostgreSQL** node is much faster and more robust.
+- **Node:** Add a **PostgreSQL** node after the **Basic LLM Chain**.
+- **Operation:** `Execute Query`
+- **Query:** 
+```sql
+INSERT INTO invoices (
+  invoice_number, 
+  po_reference, 
+  vendor_name_extracted, 
+  total_amount, 
+  google_file_id, 
+  status
+) VALUES (
+  '{{ $json.invoice_number }}', 
+  '{{ $json.po_reference }}', 
+  '{{ $json.vendor_name }}', 
+  {{ $json.total_amount || 0 }}, 
+  '{{ $node["Google Drive Trigger"].json["id"] }}', 
+  'PROCESSING'
+) 
+ON CONFLICT (google_file_id) 
+DO UPDATE SET 
+  invoice_number = EXCLUDED.invoice_number,
+  vendor_name_extracted = EXCLUDED.vendor_name_extracted,
+  total_amount = EXCLUDED.total_amount,
+  updated_at = NOW();
+```
+
+---
+
+## Alternative: Save to Supabase (Branching Way)
+- **Critial Fix for "UUID undefined" Error:** This error happens if you manually execute the node OR if the IF node sends `undefined` to a UUID field.
 - **Steps:**
-  1. **Add a Supabase Node (Get):** 
-     - **Operation:** `Get` 
-     - **Table:** `invoices`
-     - **Filter:** `google_file_id` equals `{{ $node["Google Drive Trigger"].json["id"] }}`.
-     - **SETTINGS (Crucial):** Go to the **Settings** tab of this node and turn **ON** "Always Output Data". This ensures the workflow continues even for new invoices.
-  2. **Add an IF Node:** 
-     - **Condition:** `{{ $node["Get a row"].json["id"] }}` is not empty.
+  1. **Get a row Node:** Set "Always Output Data" to ON in Settings.
+  2. **IF Node:** Condition `{{ $node["Get a row"].json["id"] }}` is not empty.
      - > [!IMPORTANT]
-     - > **NODE NAME MISMATCH:** The name inside `$node["..."]` must *exactly* match the name of the node in your sidebar. If your node is named **"Get a row"**, use that. If it's **"Supabase Get"**, use that.
-  3. **True Branch (Update):** Connect to a Supabase node with `Operation: Update`.
-     - **Table Name or ID:** `invoices`
-     - **Select Type:** `Build Manually`
-     - **Must Match:** `All Select Conditions`
-     - **Select Conditions:** Click "Add Condition".
-       - **Field Name or ID:** `id`
-       - **Field Value:** Use an expression: `{{ $node["Get a row"].json["id"] }}`
-     - **Data to Send:** `Define Below for Each Column`
-     - **Fields to Send:** Click "Add Field" for each:
-       - `invoice_number`: `{{ $json.invoice_number }}`
-       - `vendor_name_extracted`: `{{ $json.vendor_name }}`
-       - `po_reference`: `{{ $json.po_reference }}`
-       - `total_amount`: `{{ $json.total_amount }}`
-       - `updated_at`: `{{ new Date().toISOString() }}`
-  4. **False Branch (Create):** Connect to your existing Supabase node with `Operation: Create`.
-
-**Mapping for Create/Update:**
-- `invoice_number`: `{{ $json.invoice_number }}`
-- `po_reference`: `{{ $json.po_reference }}`
-- `vendor_name_extracted`: `{{ $json.vendor_name }}`
-- `total_amount`: `{{ $json.total_amount }}`
-- `google_file_id`: `{{ $node["Google Drive Trigger"].json["id"] }}`
-- `status`: `PROCESSING`
-
-> [!TIP]
-> Alternatively, if you have the **PostgreSQL** node installed, you can use a single node with this SQL command:
-> `INSERT INTO invoices (invoice_number, po_reference, vendor_name_extracted, total_amount, google_file_id, status) VALUES ('{{ $json.invoice_number }}', '{{ $json.po_reference }}', '{{ $json.vendor_name }}', {{ $json.total_amount }}, '{{ $node["Google Drive Trigger"].json["id"] }}', 'PROCESSING') ON CONFLICT (google_file_id) DO UPDATE SET updated_at = NOW();`
+     - > **NODE NAME:** Must match exactly. Use `$node["Get a row"]`.
+  3. **Update Node (True Branch):** 
+     - Only runs if ID exists.
+     - **Select Conditions:** `id` equals `{{ $node["Get a row"].json["id"] }}`.
+     - > [!CAUTION]
+     - > If you manually click "Execute Step" here while looking at a new invoice, it will fail with "undefined" because `Get a row` has no ID to give! Test with a full workflow run.
 
 ## 4. NEW NODE: Move Processed File
 - **Goal:** Clean up the inbox.
