@@ -35,6 +35,7 @@ type Invoice = {
     status: string
     pdf_link: string
     exception_reason: string | null
+    audit_trail: string | null
     created_at: string
 }
 
@@ -249,6 +250,17 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
 
                                                 {!isProcessing && (
                                                     <div className="mt-6 space-y-4">
+                                                        {invoice.audit_trail && (
+                                                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3 items-start">
+                                                                <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-600 shrink-0">
+                                                                    <Wand2 size={14} />
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-[10px] font-black text-indigo-900/50 uppercase tracking-widest block mb-0.5">AI Insight & Policy Check</span>
+                                                                    <p className="text-sm font-medium text-indigo-900 italic">"{invoice.audit_trail}"</p>
+                                                                </div>
+                                                            </div>
+                                                        )}
                                                         <div className="bg-white/80 backdrop-blur border border-amber-200 rounded-xl p-4 shadow-sm">
                                                             <label className="text-[10px] font-black text-amber-900/50 uppercase tracking-[0.2em] mb-2 block">Resolution Instruction / Inquiry Memo</label>
                                                             <textarea
@@ -280,13 +292,25 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                     </div>
                                 ) : (
                                     <div className="p-8 bg-emerald-50/50 border-b border-emerald-100">
-                                        <div className="flex items-center gap-4">
+                                        <div className="flex items-start gap-4">
                                             <div className="bg-emerald-100 p-2.5 rounded-xl border border-emerald-200 shadow-sm text-emerald-600">
                                                 <CheckCircle size={20} />
                                             </div>
-                                            <div>
+                                            <div className="flex-1">
                                                 <h3 className="text-emerald-900 font-bold text-sm">Perfect Match Verified</h3>
-                                                <p className="text-emerald-800 text-xs mt-0.5">Gemini confirmed 100% alignment with PO {invoice.po_reference}.</p>
+                                                <p className="text-emerald-800 text-xs mt-0.5 mb-4">Gemini confirmed 100% alignment with PO {invoice.po_reference}.</p>
+
+                                                {invoice.audit_trail && (
+                                                    <div className="bg-white/60 border border-emerald-200 rounded-xl p-4 flex gap-3 items-start max-w-2xl">
+                                                        <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-600 shrink-0">
+                                                            <Wand2 size={14} />
+                                                        </div>
+                                                        <div>
+                                                            <span className="text-[10px] font-black text-emerald-900/50 uppercase tracking-widest block mb-0.5">AI Insight</span>
+                                                            <p className="text-sm font-medium text-emerald-900 italic">"{invoice.audit_trail}"</p>
+                                                        </div>
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     </div>
