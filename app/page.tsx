@@ -23,11 +23,13 @@ export const dynamic = 'force-dynamic'
 export default async function Dashboard() {
   const supabase = await createClient()
 
-  // Try fetching from Supabase first
+  // Fetch all for accurate stats, filter for display in the table below
   let { data: invoices, error } = await supabase
     .from('invoices')
     .select('*')
     .order('created_at', { ascending: false })
+
+  const actionableInvoices = invoices?.filter(i => !['POSTED', 'REJECTED'].includes(i.status)) || [];
 
   // FALLBACK: Use Mock Data if DB is empty or fails
   // FALLBACK: Use Mock Data if DB is empty or fails
@@ -153,7 +155,7 @@ export default async function Dashboard() {
                 </tr>
               </thead>
               <tbody className="bg-white divide-y divide-slate-50">
-                {invoices?.length === 0 ? (
+                {actionableInvoices.length === 0 ? (
                   <tr>
                     <td colSpan={6} className="px-8 py-20 text-center text-slate-400">
                       <div className="flex flex-col items-center justify-center max-w-xs mx-auto">
@@ -166,7 +168,7 @@ export default async function Dashboard() {
                     </td>
                   </tr>
                 ) : (
-                  invoices?.map((invoice) => (
+                  actionableInvoices.map((invoice) => (
                     <tr key={invoice.id} className="hover:bg-slate-50/50 transition-colors group">
                       <td className="px-8 py-6 whitespace-nowrap">
                         <StatusBadge status={invoice.status} />
