@@ -56,7 +56,7 @@ export default async function Dashboard() {
       {/* Premium Top Bar */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-4 sticky top-0 z-20 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Logo showText={false} width={32} />
+          <Logo showText={false} width={100} height={32} className="-ml-1" />
           <div>
             <h1 className="text-lg font-bold text-slate-900 leading-tight tracking-tight">Intelligence Dashboard</h1>
             <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] opacity-70">AP + AI Operating System</p>

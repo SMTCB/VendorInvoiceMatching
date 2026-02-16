@@ -16,7 +16,6 @@ export const metadata: Metadata = {
 };
 
 import { createClient } from "@/lib/supabase/server";
-import { UserProfile } from "@/components/user-profile";
 import { Sidebar } from "@/components/sidebar";
 
 export default async function RootLayout({
@@ -42,12 +41,6 @@ export default async function RootLayout({
           <div className="flex-1 overflow-y-auto w-full">
             {children}
           </div>
-          {/* Keep User Profile floating or at bottom of sidebar */}
-          {user && (
-            <div className="absolute bottom-6 left-6 w-52 z-40 bg-brand-navy rounded-xl">
-              <UserProfile user={user} />
-            </div>
-          )}
         </main>
       </body>
     </html>

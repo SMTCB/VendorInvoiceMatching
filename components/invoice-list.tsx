@@ -32,8 +32,6 @@ interface InvoiceListProps {
 
 export function InvoiceList({ invoices }: InvoiceListProps) {
     const [searchTerm, setSearchTerm] = useState('')
-    const [statusFilter, setStatusFilter] = useState<string | null>(null)
-    const [showFilters, setShowFilters] = useState(false)
 
     const filteredInvoices = useMemo(() => {
         return invoices.filter(invoice => {
@@ -42,13 +40,9 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                 (invoice.invoice_number?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
                 (invoice.po_reference?.toLowerCase() || '').includes(searchTerm.toLowerCase())
 
-            const matchesStatus = !statusFilter || invoice.status === statusFilter
-
-            return matchesSearch && matchesStatus
+            return matchesSearch
         })
-    }, [invoices, searchTerm, statusFilter])
-
-    const statuses = Array.from(new Set(invoices.map(i => i.status)))
+    }, [invoices, searchTerm])
 
     return (
         <div className="bg-white rounded-2xl shadow-xl shadow-slate-200/50 border border-slate-200 overflow-hidden flex flex-col">
@@ -69,63 +63,20 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
                                 type="text"
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                placeholder="Search vendor Name, PO or Invoice Nr..."
+                                placeholder="Search Vendor name, PO or Invoice Nr..."
                                 className="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-blue/20 focus:border-brand-blue transition-all"
                             />
+                            {searchTerm && (
+                                <button
+                                    onClick={() => setSearchTerm('')}
+                                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-300 hover:text-slate-500 transition-colors"
+                                >
+                                    <X size={14} />
+                                </button>
+                            )}
                         </div>
-                        <button
-                            onClick={() => setShowFilters(!showFilters)}
-                            className={cn(
-                                "flex items-center gap-2 px-4 py-2 border rounded-xl text-sm font-semibold transition-all shadow-sm",
-                                showFilters || statusFilter
-                                    ? "bg-brand-blue text-white border-brand-blue"
-                                    : "bg-white border-slate-200 text-slate-700 hover:bg-slate-50"
-                            )}
-                        >
-                            <Filter size={14} /> {statusFilter ? statusFilter.replace(/_/g, ' ') : 'Filters'}
-                            {(statusFilter || searchTerm) && (
-                                <X
-                                    size={14}
-                                    className="ml-1 hover:scale-110"
-                                    onClick={(e) => {
-                                        e.stopPropagation()
-                                        setSearchTerm('')
-                                        setStatusFilter(null)
-                                    }}
-                                />
-                            )}
-                        </button>
                     </div>
                 </div>
-
-                {/* Quick Status Filters */}
-                {showFilters && (
-                    <div className="flex flex-wrap gap-2 pt-2 animate-in fade-in slide-in-from-top-2">
-                        <button
-                            onClick={() => setStatusFilter(null)}
-                            className={cn(
-                                "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border",
-                                !statusFilter ? "bg-slate-900 text-white border-slate-900" : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
-                            )}
-                        >
-                            All
-                        </button>
-                        {statuses.map(status => (
-                            <button
-                                key={status}
-                                onClick={() => setStatusFilter(status)}
-                                className={cn(
-                                    "px-3 py-1.5 rounded-lg text-xs font-bold transition-all border",
-                                    statusFilter === status
-                                        ? "bg-brand-blue text-white border-brand-blue"
-                                        : "bg-white text-slate-500 border-slate-200 hover:bg-slate-50"
-                                )}
-                            >
-                                {status.replace(/_/g, ' ')}
-                            </button>
-                        ))}
-                    </div>
-                )}
             </div>
 
             {/* Table Area */}

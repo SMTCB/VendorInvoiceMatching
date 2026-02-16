@@ -5,21 +5,22 @@ import { usePathname } from "next/navigation";
 import { LayoutDashboard, FileText, ShieldCheck, PieChart } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Logo } from "./ui/logo";
+import { UserProfile } from "./user-profile";
 
 export function Sidebar({ user }: { user: any }) {
     const pathname = usePathname();
 
     return (
-        <aside className="w-64 bg-brand-navy text-white flex-shrink-0 flex flex-col shadow-2xl shadow-brand-navy/50 z-30 h-screen sticky top-0">
-            <div className="p-8 border-b border-white/5 space-y-6">
-                <Logo showText={false} className="brightness-0 invert opacity-90" />
-                <div>
-                    <h2 className="text-white font-black text-xs uppercase tracking-[0.2em] leading-relaxed">
+        <aside className="w-64 bg-brand-navy text-white flex-shrink-0 flex flex-col shadow-2xl shadow-brand-navy/50 z-30 h-screen sticky top-0 border-r border-white/5">
+            <div className="p-8 space-y-4">
+                <Logo showText={false} width={180} height={60} className="brightness-0 invert opacity-90 -ml-2" />
+                <div className="pt-2">
+                    <h2 className="text-white font-black text-2xl tracking-tighter leading-none mb-1">
                         AP + AI
-                        <span className="block text-[8px] text-slate-400 font-bold opacity-70 mt-1 uppercase tracking-widest leading-none">
-                            Accounts Payable with Intelligence
-                        </span>
                     </h2>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-[0.2em] opacity-60">
+                        Accounts Payable Intelligence
+                    </p>
                 </div>
             </div>
 
@@ -50,9 +51,9 @@ export function Sidebar({ user }: { user: any }) {
                 />
             </nav>
 
-            {/* Profile area can stay in layout or moved here */}
-            <div className="mt-auto">
-                {/* UserProfile will be passed or rendered here */}
+            {/* Profile area moved inside sidebar */}
+            <div className="mt-auto p-4 border-t border-white/5">
+                <UserProfile user={user} />
             </div>
         </aside>
     );
