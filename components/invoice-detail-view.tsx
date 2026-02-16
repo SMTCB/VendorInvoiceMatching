@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import {
     ArrowLeft,
@@ -52,10 +53,22 @@ type InvoiceDetailViewProps = {
 }
 
 export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) {
+    const router = useRouter();
     const [activeTab, setActiveTab] = useState<'matching' | 'copilot'>('matching');
     const [inquiryNote, setInquiryNote] = useState('');
 
     const isProcessing = invoice.status === 'PROCESSING';
+
+    // Auto-refresh while processing
+    useEffect(() => {
+        if (!isProcessing) return;
+
+        const interval = setInterval(() => {
+            router.refresh();
+        }, 3000);
+
+        return () => clearInterval(interval);
+    }, [isProcessing, router]);
 
     const handleSendInquiry = async () => {
         if (!window.confirm('Send inquiry email to vendor?')) return;
