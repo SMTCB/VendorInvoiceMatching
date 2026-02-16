@@ -106,5 +106,18 @@ DO UPDATE SET
 ## 5. NEW NODE: Trigger Matching (Optional for Real-Time)
 - **Goal:** Immediately move to the "Matching" phase without waiting for the 1-minute poller.
 - **Action:** Add an **Execute Workflow** node at the very end.
-  - **Workflow ID:** Select your **Match Invoices (Workflow 2)**.
-  - **Wait for completion:** Turn **OFF** (this keeps the ingestion fast).
+  - **Workflow ID:** Select **02_Matching_Smart_Judge**.
+  
+  > [!IMPORTANT]
+  > **CAN'T SEE WORKFLOW 2?** 
+  > For a workflow to appear in this list, it **must** start with an **Execute Workflow Trigger** node. 
+  > 1. Go to **02_Matching_Smart_Judge**.
+  > 2. Add the **Execute Workflow Trigger** node and **connect it** to the **Get Processing Invoices** node (you'll have two triggers connected to it: Schedule and Execute Workflow).
+  > 3. **Save** the workflow.
+  > 4. Go back to Workflow 1. Click "Refresh" or re-open the node, and it will show up in the list!
+
+  **Execute Workflow Node Settings:**
+  - **Source:** Choose **Local** (if available) or keep **Database**.
+  - **Workflow:** Select **02_Matching_Smart_Judge**.
+  - **Mode:** `Run once with all items`.
+  - **Wait for completion:** Turn **OFF**.
