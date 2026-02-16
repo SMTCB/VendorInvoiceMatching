@@ -35,17 +35,23 @@ Example: {"invoice_number": "INV-123", ...}
 ```
 
 ## 3. Save to Supabase (Idempotency Workaround)
-- **Problem:** If your n8n version lacks the `Upsert` operation, we will use a "Get then Branch" logic.
+- **Critial Fix:** n8n stops the workflow if a "Get" node finds nothing. We must force it to continue.
 - **Steps:**
-  1. **Add a Supabase Node (Get):** Before saving, use `Operation: Get` to search table `invoices` where `google_file_id` equals `{{ $node["Google Drive Trigger"].json["id"] }}`.
-  2. **Add an IF Node:** Check if the previous node returned any results (`{{ $node["Supabase Get"].json["id"] }}` is not empty).
+  1. **Add a Supabase Node (Get):** 
+     - **Operation:** `Get` 
+     - **Table:** `invoices`
+     - **Filter:** `google_file_id` equals `{{ $node["Google Drive Trigger"].json["id"] }}`.
+     - **SETTINGS (Crucial):** Go to the **Settings** tab of this node and turn **ON** "Always Output Data". This ensures the workflow continues even for new invoices.
+  2. **Add an IF Node:** 
+     - **Condition:** `{{ $node["Get a row"].json["id"] }}` is not empty.
+     - **Note:** Ensure the node name in the expression matches your "Get" node name (e.g., `Get a row`).
   3. **True Branch (Update):** Connect to a Supabase node with `Operation: Update`.
      - **Table Name or ID:** `invoices`
      - **Select Type:** `Build Manually`
      - **Must Match:** `All Select Conditions`
      - **Select Conditions:** Click "Add Condition".
        - **Field Name or ID:** `id`
-       - **Field Value:** Use an expression: `{{ $node["Supabase Get"].json["id"] }}`
+       - **Field Value:** Use an expression: `{{ $node["Get a row"].json["id"] }}`
      - **Data to Send:** `Define Below for Each Column`
      - **Fields to Send:** Click "Add Field" for each:
        - `invoice_number`: `{{ $json.invoice_number }}`
@@ -71,6 +77,6 @@ Example: {"invoice_number": "INV-123", ...}
 - **Goal:** Clean up the inbox.
 - **Action:** Add a **Google Drive** node at the very end.
   - **Resource:** `File`
-  - **Operation:** `Update`
+  - **Operation:** `Move`
   - **File ID:** `{{ $node["Google Drive Trigger"].json["id"] }}`
-  - **Parent IDs:** Set to `10_Y_bu9Cz99MataERG6ylQEi6Zec7Ht-` (your Processed folder).
+  - **Parent Folder:** Use `By ID` and set to `10_Y_bu9Cz99MataERG6ylQEi6Zec7Ht-` (your Processed folder).
