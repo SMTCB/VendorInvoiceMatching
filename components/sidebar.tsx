@@ -12,9 +12,9 @@ export function Sidebar({ user }: { user: any }) {
 
     return (
         <aside className="w-64 bg-brand-navy text-white flex-shrink-0 flex flex-col shadow-2xl shadow-brand-navy/50 z-30 h-screen sticky top-0 border-r border-white/5">
-            <div className="p-8 space-y-4">
-                <Logo showText={false} width={180} height={60} className="brightness-0 invert opacity-90 -ml-2" />
-                <div className="pt-2">
+            <div className="p-8 pb-4">
+                <Logo showText={false} width={220} height={100} className="-ml-6" />
+                <div className="mt-4">
                     <h2 className="text-white font-black text-2xl tracking-tighter leading-none mb-1">
                         AP + AI
                     </h2>
