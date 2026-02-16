@@ -28,6 +28,11 @@ export default async function InvoicePage({
         if (dbInvoice) {
             console.log(`[InvoicePage] Found in Supabase for ID: ${id}`);
             invoice = dbInvoice;
+
+            // Construct Google Drive Preview Link if ID exists
+            if (invoice.google_file_id && !invoice.pdf_link) {
+                invoice.pdf_link = `https://drive.google.com/file/d/${invoice.google_file_id}/preview`;
+            }
         } else {
             if (invoiceError) {
                 console.warn(`[InvoicePage] Supabase error (or empty) for ${id}: ${invoiceError.message} (${invoiceError.code})`);

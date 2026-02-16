@@ -167,7 +167,10 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                     </div>
 
                     <div className="flex-1 overflow-hidden p-8 flex items-center justify-center">
-                        <div className="bg-white shadow-2xl rounded-sm border border-slate-200 w-full max-w-lg aspect-[1/1.41] relative flex flex-col items-center justify-center p-12 text-center group-hover:scale-[1.01] transition-transform duration-500">
+                        <div className={cn(
+                            "bg-white shadow-2xl rounded-sm border border-slate-200 w-full max-w-lg aspect-[1/1.41] relative flex flex-col items-center justify-center text-center group-hover:scale-[1.01] transition-transform duration-500",
+                            (invoice.pdf_link && invoice.pdf_link.startsWith('http') && !isProcessing) ? "p-0 overflow-hidden" : "p-12"
+                        )}>
                             {isProcessing ? (
                                 <div className="space-y-6">
                                     <div className="relative">
@@ -179,14 +182,26 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                         <p className="text-sm text-slate-500 mt-2">Running OCR and identifying line items with 99.8% confidence...</p>
                                     </div>
                                 </div>
+                            ) : (invoice.pdf_link && invoice.pdf_link.startsWith('http')) ? (
+                                <div className="relative w-full h-full group/pdf">
+                                    <iframe
+                                        src={invoice.pdf_link}
+                                        className="w-full h-full border-none"
+                                        title="Invoice PDF"
+                                    />
+                                    <a
+                                        href={invoice.pdf_link.replace('/preview', '/view')}
+                                        target="_blank"
+                                        className="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-lg text-xs font-bold text-slate-700 border border-slate-200 shadow-lg hover:bg-white transition-all uppercase tracking-widest opacity-0 group-hover/pdf:opacity-100 translate-y-2 group-hover/pdf:translate-y-0 duration-300"
+                                    >
+                                        Open Full View
+                                    </a>
+                                </div>
                             ) : (
                                 <>
                                     <FileText size={64} className="text-slate-200 mb-6" />
-                                    <div className="text-slate-400 font-medium">PDF Preview Restricted in POC</div>
+                                    <div className="text-slate-400 font-medium">PDF Preview Unavailable</div>
                                     <p className="text-[10px] text-slate-300 uppercase tracking-widest mt-2">{invoice.invoice_number || 'DOC_ID_PENDING'}</p>
-                                    <a href={invoice.pdf_link} target="_blank" className="mt-8 bg-slate-50 border border-slate-200 px-6 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-100 transition-colors uppercase tracking-widest shadow-sm">
-                                        Download PDF
-                                    </a>
                                 </>
                             )}
 
