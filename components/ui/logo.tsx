@@ -5,9 +5,10 @@ import { cn } from '@/lib/utils';
 interface LogoProps {
     className?: string;
     showText?: boolean;
+    width?: number;
 }
 
-export function Logo({ className, showText = true }: LogoProps) {
+export function Logo({ className, showText = true, width = 120 }: LogoProps) {
     return (
         <div className={cn("flex items-center gap-2", className)}>
             <div className="relative h-10 w-auto aspect-[3/1]">

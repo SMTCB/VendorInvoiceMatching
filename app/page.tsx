@@ -16,6 +16,7 @@ import {
   LayoutDashboard
 } from 'lucide-react'
 import { Logo } from '@/components/ui/logo'
+import { PollPortalButton } from '@/components/poll-portal-button'
 
 export const dynamic = 'force-dynamic'
 
@@ -47,26 +48,16 @@ export default async function Dashboard() {
       {/* Premium Top Bar */}
       <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-4 sticky top-0 z-20 flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <div className="bg-brand-navy p-2 rounded-lg text-white">
-            <LayoutDashboard size={20} />
+          <div className="bg-brand-navy p-2 rounded-lg text-white shadow-inner">
+            <Logo showText={false} width={32} />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-slate-900 leading-tight">Intelligence Dashboard</h1>
-            <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">AP + AI Operating System</p>
+            <h1 className="text-lg font-bold text-slate-900 leading-tight tracking-tight">Intelligence Dashboard</h1>
+            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] opacity-70">AP + AI Operating System</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <div className="flex -space-x-2">
-            {[1, 2, 3].map(i => (
-              <div key={i} className="w-8 h-8 rounded-full border-2 border-white bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-600">
-                U{i}
-              </div>
-            ))}
-          </div>
-          <button className="bg-brand-navy text-white px-4 py-2 rounded-lg text-sm font-semibold shadow-lg shadow-brand-navy/20 hover:scale-[1.02] transition-transform flex items-center gap-2">
-            <Zap size={14} className="text-brand-cyan" />
-            Process New Batch
-          </button>
+          <PollPortalButton />
         </div>
       </header>
 

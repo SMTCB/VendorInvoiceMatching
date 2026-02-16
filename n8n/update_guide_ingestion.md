@@ -7,6 +7,15 @@ Follow these steps to update your ingestion workflow for robust data extraction 
 - **Action:** No special setting needed for "Action" or "Output". n8n triggers automatically output the file `id` once they fire.
 - **Reference:** We will use this `id` later in the **Save to Supabase** and **Move Processed File** nodes.
 
+### 🌐 Manual Trigger (Webhook)
+To enable the **Poll Vendor Portal** button in the UI, you must add an alternative trigger:
+1. Add a **Webhook** node to your workflow.
+2. **HTTP Method:** `POST`.
+3. **Path:** `poll-portal`.
+4. **Respond:** `When Finished` (or `Immediately`).
+5. **Connection:** Connect this Webhook node output to the same **Download PDF** node as your Google Drive trigger.
+6. **URL:** Copy the "Production URL" (or Test URL for testing) and paste it into your project's `.env` file as `N8N_INGESTION_WEBHOOK_URL`.
+
 ## 2. Download PDF (Regular Google Drive Node)
 - **Goal:** Download the binary content for OCR.
 - **Action:** Set `Resource` to `File` and `Operation` to `Download`.

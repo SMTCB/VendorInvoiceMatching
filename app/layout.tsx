@@ -28,8 +28,13 @@ export default function RootLayout({
         {/* Premium Sidebar Navigation */}
         <aside className="w-64 bg-brand-navy text-white flex-shrink-0 flex flex-col shadow-2xl shadow-brand-navy/50 z-30">
           <div className="p-8 border-b border-white/5">
-            <Logo showText={true} className="text-brand-cyan [&_span]:text-white" />
-            <p className="text-[10px] text-slate-400 mt-2 pl-1 font-black uppercase tracking-widest opacity-60">Enterprise AP Platform</p>
+            <h2 className="text-white font-black text-xs uppercase tracking-[0.2em] leading-relaxed">
+              AP + AI
+              <span className="block text-[8px] text-slate-400 font-bold opacity-70 mt-1 uppercase tracking-widest leading-none">
+                Accounts Payable with Intelligence
+              </span>
+            </h2>
+            <p className="text-[10px] text-slate-500 mt-4 pl-1 font-black uppercase tracking-widest opacity-60">Enterprise AP Platform</p>
           </div>
 
           <nav className="flex-1 p-6 space-y-2">
