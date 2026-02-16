@@ -113,8 +113,9 @@ DO UPDATE SET
   > There are two nodes with similar names. You **must** use the **Trigger** version in Workflow 2.
   > 
   > 1. In **02_Matching_Smart_Judge**:
-  >    - **DELETE** the "Execute Workflow" node (the one with the arrow pointing into a bracket `->]`). That is for *calling* other workflows.
-  >    - **ADD** the **Execute Workflow Trigger** node (the one that looks like a play button in a circle). This node has **ZERO parameters** to fill in—it just acts as an entry point.
+  >    - **DELETE** the "Execute Workflow" node (the one with the arrow pointing into a bracket `->]`).
+  >    - **ADD** the **Execute Workflow Trigger** node.
+  >    - **Input data mode:** Set this to **None** (or just leave it empty). Since Workflow 2 fetches everything from the database itself, you don't need to pass any data fields.
   >    - **Connect it** to the **Get Processing Invoices** node.
   >    - **Save** the workflow.
   > 
