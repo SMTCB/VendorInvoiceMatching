@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
 
 export async function POST() {
-    const webhookUrl = process.env.N8N_INGESTION_WEBHOOK_URL
+    // Use process.env or fallback to the known working URL if env loading fails
+    const webhookUrl = process.env.N8N_INGESTION_WEBHOOK_URL || 'https://amiably-vitiated-hilde.ngrok-free.dev/webhook/poll-portal';
 
     console.log('Poll Portal API Triggered')
     console.log('ENV DEBUG CHECK:', {
         hasUrl: !!webhookUrl,
         urlLength: webhookUrl?.length,
-        NODE_ENV: process.env.NODE_ENV
+        NODE_ENV: process.env.NODE_ENV,
+        source: process.env.N8N_INGESTION_WEBHOOK_URL ? 'ENV' : 'FALLBACK'
     })
 
     if (!webhookUrl) {
