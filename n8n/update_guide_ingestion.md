@@ -39,7 +39,20 @@ Example: {"invoice_number": "INV-123", ...}
 - **Steps:**
   1. **Add a Supabase Node (Get):** Before saving, use `Operation: Get` to search table `invoices` where `google_file_id` equals `{{ $node["Google Drive Trigger"].json["id"] }}`.
   2. **Add an IF Node:** Check if the previous node returned any results (`{{ $node["Supabase Get"].json["id"] }}` is not empty).
-  3. **True Branch (Update):** Connect to a Supabase node with `Operation: Update`. Set `Row ID` to the one found in step 1.
+  3. **True Branch (Update):** Connect to a Supabase node with `Operation: Update`.
+     - **Table Name or ID:** `invoices`
+     - **Select Type:** `Build Manually`
+     - **Must Match:** `All Select Conditions`
+     - **Select Conditions:** Click "Add Condition".
+       - **Field Name or ID:** `id`
+       - **Field Value:** Use an expression: `{{ $node["Supabase Get"].json["id"] }}`
+     - **Data to Send:** `Define Below for Each Column`
+     - **Fields to Send:** Click "Add Field" for each:
+       - `invoice_number`: `{{ $json.invoice_number }}`
+       - `vendor_name_extracted`: `{{ $json.vendor_name }}`
+       - `po_reference`: `{{ $json.po_reference }}`
+       - `total_amount`: `{{ $json.total_amount }}`
+       - `updated_at`: `{{ new Date().toISOString() }}`
   4. **False Branch (Create):** Connect to your existing Supabase node with `Operation: Create`.
 
 **Mapping for Create/Update:**
