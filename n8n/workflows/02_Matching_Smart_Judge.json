@@ -33,70 +33,6 @@
     },
     {
       "parameters": {
-        "operation": "getAll",
-        "tableId": "exception_rules",
-        "returnAll": true,
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "is_active",
-              "condition": "eq",
-              "keyValue": "true"
-            }
-          ]
-        }
-      },
-      "id": "aca9aaad-980a-4960-a176-226062fa1e17",
-      "name": "Fetch Rules",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        -16,
-        -304
-      ],
-      "alwaysOutputData": true,
-      "executeOnce": true,
-      "credentials": {
-        "supabaseApi": {
-          "id": "lCJ6y77GtHhdrQRD",
-          "name": "Supabase account"
-        }
-      }
-    },
-    {
-      "parameters": {
-        "operation": "getAll",
-        "tableId": "ai_learning_examples",
-        "returnAll": true,
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "expected_status",
-              "condition": "eq",
-              "keyValue": "READY_TO_POST"
-            }
-          ]
-        }
-      },
-      "id": "7b3048ec-5ce8-4b9a-83b7-f4d5fa5699c0",
-      "name": "Fetch Examples",
-      "type": "n8n-nodes-base.supabase",
-      "typeVersion": 1,
-      "position": [
-        208,
-        -304
-      ],
-      "alwaysOutputData": true,
-      "executeOnce": true,
-      "credentials": {
-        "supabaseApi": {
-          "id": "lCJ6y77GtHhdrQRD",
-          "name": "Supabase account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "rules": {
           "values": [
             {
@@ -305,7 +241,7 @@
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
       "position": [
-        720,
+        308,
         0
       ],
       "id": "657c500d-847e-4b0f-8b27-aabd798892b4",
@@ -331,11 +267,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Fetch Rules": {
-      "main": [
-        []
       ]
     },
     "Switch": {
@@ -369,11 +300,6 @@
             "index": 0
           }
         ]
-      ]
-    },
-    "Fetch Examples": {
-      "main": [
-        []
       ]
     },
     "Google Gemini Chat Model": {
@@ -450,12 +376,5 @@
     "availableInMCP": false,
     "timeSavedMode": "fixed",
     "callerPolicy": "workflowsFromSameOwner"
-  },
-  "versionId": "339dd7ff-5cd3-4b1b-9ae2-f7ead8ac9f54",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "d6710e9f15c70882d98afad91b3f6139fc5da765f9731179deba30590d41a06c"
-  },
-  "id": "BcJAvoHSugKpk5lc",
-  "tags": []
+  }
 }
