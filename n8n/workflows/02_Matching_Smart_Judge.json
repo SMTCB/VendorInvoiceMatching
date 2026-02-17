@@ -190,7 +190,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE invoices\nSET \n  status = '{{ $json.status }}',\n  exception_reason = '{{ $json.exception_reason }}',\n  audit_trail = '{{ $json.audit_trail }}',\n  updated_at = NOW()\nWHERE id = '{{ $(\"Get Processing Invoices\").first().json.id }}';",
+        "query": "UPDATE invoices\nSET \n  status = '{{ $json.status }}',\n  exception_reason = '{{ ($json.exception_reason || \"\").replace(/'/g, \"''\") }}',\n  audit_trail = '{{ ($json.audit_trail || \"\").replace(/'/g, \"''\") }}',\n  updated_at = NOW()\nWHERE id = '{{ $(\"Get Processing Invoices\").first().json.id }}';",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
