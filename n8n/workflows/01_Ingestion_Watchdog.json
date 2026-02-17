@@ -209,7 +209,7 @@
       "parameters": {
         "resource": "fileFolder",
         "searchMethod": "query",
-        "queryString": "=",
+        "queryString": "trashed = false",
         "filter": {
           "folderId": {
             "__rl": true,
