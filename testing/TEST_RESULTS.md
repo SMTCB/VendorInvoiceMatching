@@ -12,7 +12,7 @@ Use this file to track the outcome of the structured testing phase.
 | 2026-02-17 | C2-003 | [PASS] | "Invoice quantity (15) exceeds PO quantity (10)... BLOCKED_QTY" | **UAT SUCCESS.** Qty variance correctly detected. |
 | 2026-02-17 | C3-001.1 | [PASS] | "Invoice quantity is 5, while the PO ordered quantity is 10. Since 5 <= 10, it's a valid partial delivery." | **UAT SUCCESS.** Partial delivery accepted as READY_TO_POST. |
 | 2026-02-17 | C3-001.2 | [PASS] | "The keyword FINAL is present... Short delivery marked as final and requires review." | **UAT SUCCESS.** Short 'Final' delivery flagged as AWAITING_INFO. |
-| | C4-001 | [ ] | | |
+| 2026-02-17 | C4-001 | [PASS] | "Invoice C4-001-VENDOR matches PO 4500001005... matches the invoice line item... READY_TO_POST" | **UAT SUCCESS.** Fuzzy vendor match implicitly accepted via strong PO link. |
 | | C5-001 | [ ] | | |
 
 ## Execution Log Details
