@@ -3,31 +3,22 @@
   "nodes": [
     {
       "parameters": {
-        "operation": "getAll",
-        "tableId": "ekpo",
-        "returnAll": true,
-        "filters": {
-          "conditions": [
-            {
-              "keyName": "po_number",
-              "condition": "eq",
-              "keyValue": "={{ $json.po_reference }}"
-            }
-          ]
-        }
+        "operation": "executeQuery",
+        "query": "SELECT \n  Item.po_number, \n  Item.line_item, \n  Item.material, \n  Item.ordered_qty as open_qty, \n  Item.unit_price,\n  Header.currency\nFROM ekpo as Item\nJOIN ekko as Header ON Item.po_number = Header.po_number\nWHERE Item.po_number = '{{ $json.po_reference }}';",
+        "options": {}
       },
       "id": "fb0322d7-a4ef-46e9-8eb7-b8ad428a2efd",
       "name": "Fetch PO Lines",
-      "type": "n8n-nodes-base.supabase",
+      "type": "n8n-nodes-base.postgres",
       "typeVersion": 1,
       "position": [
         384,
         0
       ],
       "credentials": {
-        "supabaseApi": {
-          "id": "lCJ6y77GtHhdrQRD",
-          "name": "Supabase account"
+        "postgres": {
+          "id": "Huq7u9262231y61",
+          "name": "Postgres account"
         }
       }
     },
