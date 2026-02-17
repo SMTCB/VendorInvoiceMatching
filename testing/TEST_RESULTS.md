@@ -10,7 +10,7 @@ Use this file to track the outcome of the structured testing phase.
 | 2026-02-17 | C2-001 | [PASS] | "Invoice matches the PO data... READY_TO_POST" | **UAT SUCCESS.** End-to-end flow confirmed. |
 | 2026-02-17 | C2-002 | [PASS] | "Invoice unit price is $55, while PO unit price is $50... BLOCKED_PRICE" | **UAT SUCCESS.** Price variance correctly detected and blocked. |
 | 2026-02-17 | C2-003 | [PASS] | "Invoice quantity (15) exceeds PO quantity (10)... BLOCKED_QTY" | **UAT SUCCESS.** Qty variance correctly detected. |
-| | C3-001 | [ ] | | |
+| 2026-02-17 | C3-001.1 | [PASS] | "Invoice quantity is 5, while the PO ordered quantity is 10. Since 5 <= 10, it's a valid partial delivery." | **UAT SUCCESS.** Partial delivery accepted as READY_TO_POST. |
 | | C3-002 | [ ] | | |
 | | C4-001 | [ ] | | |
 | | C5-001 | [ ] | | |
