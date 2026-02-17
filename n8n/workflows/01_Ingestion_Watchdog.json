@@ -38,7 +38,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/* ROBUST OCR: Ghostscript -> TIFF -> Tesseract */\nconst { execSync } = require('child_process');\nconst fs = require('fs');\n\n// 1. Get the REAL binary data using helper\n// (This line is why we don't need the previous node!)\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\nif (!buffer) return [{ json: { error: \"No data found\" } }];\n\n// Distinct filenames \nconst pdfPath = '/tmp/robust_invoice.pdf';\nconst tiffPath = '/tmp/robust_invoice.tiff';\n\ntry {\n  // 2. Write PDF to disk\n  fs.writeFileSync(pdfPath, buffer);\n  \n  // 3. Convert PDF to High-Res TIFF using Ghostscript\n  // This step FIXES the \"Pdf reading is not supported\" error\n  execSync(`gs -q -dNOPAUSE -r300 -sDEVICE=tiffg4 -sOutputFile=${tiffPath} ${pdfPath} -c quit`);\n  \n  // 4. Run Tesseract on the TIFF image\n  const stdout = execSync(`tesseract ${tiffPath} stdout`).toString();\n  \n  // 5. Cleanup\n  if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);\n  if (fs.existsSync(tiffPath)) fs.unlinkSync(tiffPath);\n  \n  return [{ json: { stdout } }];\n  \n} catch (error) {\n  throw new Error('OCR Failed: ' + error.message);\n}"
+        "jsCode": "/* ROBUST OCR: Ghostscript -> TIFF -> Tesseract */\nconst { execSync } = require('child_process');\nconst fs = require('fs');\n\n// 1. Get the REAL binary data using helper\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\nif (!buffer) return [{ json: { error: \"No data found\" } }];\n\nconst pdfPath = '/tmp/robust_invoice.pdf';\nconst tiffPath = '/tmp/robust_invoice.tiff';\n\ntry {\n  fs.writeFileSync(pdfPath, buffer);\n  execSync(`gs -q -dNOPAUSE -r300 -sDEVICE=tiffg4 -sOutputFile=${tiffPath} ${pdfPath} -c quit`);\n  const stdout = execSync(`tesseract ${tiffPath} stdout`).toString();\n  if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);\n  if (fs.existsSync(tiffPath)) fs.unlinkSync(tiffPath);\n  return [{ json: { stdout } }];\n} catch (error) {\n  throw new Error('OCR Failed: ' + error.message);\n}"
       },
       "id": "440699bf-e24b-4fe4-a43a-391a75023f22",
       "name": "Run Tesseract OCR (Code Node)",
@@ -120,9 +120,7 @@
         "driveId": {
           "__rl": true,
           "value": "My Drive",
-          "mode": "list",
-          "cachedResultName": "My Drive",
-          "cachedResultUrl": "https://drive.google.com/drive/my-drive"
+          "mode": "list"
         },
         "folderId": {
           "__rl": true,
@@ -171,9 +169,7 @@
         "workflowId": {
           "__rl": true,
           "value": "BcJAvoHSugKpk5lc",
-          "mode": "list",
-          "cachedResultUrl": "/workflow/BcJAvoHSugKpk5lc",
-          "cachedResultName": "02_Matching_Smart_Judge"
+          "mode": "list"
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
@@ -242,7 +238,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Get the text output from the LLM\nconst text = $input.item.json.text || \"\";\n\n// Clean up markdown code blocks if present\nconst cleanJson = text.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\n\ntry {\n  // Parse the string into a real object\n  return JSON.parse(cleanJson);\n} catch (error) {\n  // Fallback if parsing fails\n  return { error: \"Failed to parse JSON\", raw: text };\n}"
+        "jsCode": "// Clean up extraction\nconst text = $input.item.json.text || \"\";\nconst cleanJson = text.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\ntry {\n  return JSON.parse(cleanJson);\n} catch (error) {\n  return { error: \"Failed to parse JSON\", raw: text };\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -256,11 +252,6 @@
   ],
   "pinData": {},
   "connections": {
-    "Google Drive Trigger": {
-      "main": [
-        []
-      ]
-    },
     "Run Tesseract OCR (Code Node)": {
       "main": [
         [
@@ -349,11 +340,6 @@
         ]
       ]
     },
-    "Call '02_Matching_Smart_Judge'": {
-      "main": [
-        []
-      ]
-    },
     "Code in JavaScript": {
       "main": [
         [
@@ -371,12 +357,5 @@
     "executionOrder": "v1",
     "binaryMode": "separate",
     "availableInMCP": false
-  },
-  "versionId": "529000a1-c870-4d82-8537-f005d68e58b5",
-  "meta": {
-    "templateCredsSetupCompleted": true,
-    "instanceId": "d6710e9f15c70882d98afad91b3f6139fc5da765f9731179deba30590d41a06c"
-  },
-  "id": "xf1PHk8XMm28nyWI",
-  "tags": []
+  }
 }
