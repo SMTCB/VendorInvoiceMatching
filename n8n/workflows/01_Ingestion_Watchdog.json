@@ -177,11 +177,10 @@
         },
         "workflowInputs": {
           "mappingMode": "defineBelow",
-          "value": {},
-          "matchingColumns": [],
-          "schema": [],
-          "attemptToConvertTypes": false,
-          "convertFieldsToString": true
+          "value": {
+            "google_file_id": "={{ $(\"Download file\").first().json.id }}",
+            "extracted_data": "={{ $json }}"
+          }
         },
         "options": {}
       },
