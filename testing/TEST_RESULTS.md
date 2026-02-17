@@ -9,7 +9,7 @@ Use this file to track the outcome of the structured testing phase.
 | 2026-02-17 | C1-003 | [PASS] | N/A | File moved to PROCESSED folder successfully. |
 | 2026-02-17 | C2-001 | [PASS] | "Invoice matches the PO data... READY_TO_POST" | **UAT SUCCESS.** End-to-end flow confirmed. |
 | 2026-02-17 | C2-002 | [PASS] | "Invoice unit price is $55, while PO unit price is $50... BLOCKED_PRICE" | **UAT SUCCESS.** Price variance correctly detected and blocked. |
-| | C2-002 | [ ] | | |
+| 2026-02-17 | C2-003 | [PASS] | "Invoice quantity (15) exceeds PO quantity (10)... BLOCKED_QTY" | **UAT SUCCESS.** Qty variance correctly detected. |
 | | C3-001 | [ ] | | |
 | | C3-002 | [ ] | | |
 | | C4-001 | [ ] | | |
