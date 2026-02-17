@@ -254,7 +254,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "UPDATE invoices\nSET \n  status = '{{ $json.status }}',\n  exception_reason = '{{ $json.exception_reason }}',\n  audit_trail = '{{ $json.audit_trail }}',\n  updated_at = NOW()\nWHERE id = '{{ $node[\"Get Processing Invoices\"].json[\"id\"] }}';",
+        "query": "UPDATE invoices\nSET \n  status = '{{ $json.status }}',\n  exception_reason = '{{ $json.exception_reason }}',\n  audit_trail = '{{ $json.audit_trail }}',\n  updated_at = NOW()\nWHERE id = '{{ $(\"Get Processing Invoices\").first().json.id }}';",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -275,7 +275,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT * \nFROM validator_rules \nWHERE is_active = true \nAND (\n  -- Fuzzy Match: If invoice vendor contains the Rule name (e.g. 'Google Inc' contains 'Google')\n  (condition_field = 'vendor_name' AND '{{ $node[\"Get Processing Invoices\"].json[\"vendor_name_extracted\"] }}' ILIKE '%' || value || '%')\n  OR\n  -- Also fetch global rules that aren't tied to a specific vendor (e.g. High Value checks)\n  (condition_field != 'vendor_name')\n);",
+        "query": "SELECT * \nFROM validator_rules \nWHERE is_active = true \nAND (\n  -- Fuzzy Match: If invoice vendor contains the Rule name (e.g. 'Google Inc' contains 'Google')\n  (condition_field = 'vendor_name' AND '{{ $(\"Get Processing Invoices\").first().json.vendor_name_extracted }}' ILIKE '%' || value || '%')\n  OR\n  -- Also fetch global rules that aren't tied to a specific vendor (e.g. High Value checks)\n  (condition_field != 'vendor_name')\n);",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
@@ -297,7 +297,7 @@
     {
       "parameters": {
         "operation": "executeQuery",
-        "query": "SELECT * \nFROM ai_learning_examples \nWHERE \n  -- Fuzzy Match: Find history where the stored vendor name is similar to current invoice\n  (vendor_name ILIKE '%' || split_part('{{ $node[\"Get Processing Invoices\"].json[\"vendor_name_extracted\"] }}', ' ', 1) || '%')\n  OR\n  (vendor_name ILIKE '%' || '{{ $node[\"Get Processing Invoices\"].json[\"vendor_name_extracted\"] }}' || '%')\nORDER BY created_at DESC\nLIMIT 3;",
+        "query": "SELECT * \nFROM ai_learning_examples \nWHERE \n  -- Fuzzy Match: Find history where the stored vendor name is similar to current invoice\n  (vendor_name ILIKE '%' || split_part('{{ $(\"Get Processing Invoices\").first().json.vendor_name_extracted }}', ' ', 1) || '%')\n  OR\n  (vendor_name ILIKE '%' || '{{ $(\"Get Processing Invoices\").first().json.vendor_name_extracted }}' || '%')\nORDER BY created_at DESC\nLIMIT 3;",
         "options": {}
       },
       "type": "n8n-nodes-base.postgres",
