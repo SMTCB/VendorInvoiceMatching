@@ -11,7 +11,7 @@ Use this file to track the outcome of the structured testing phase.
 | 2026-02-17 | C2-002 | [PASS] | "Invoice unit price is $55, while PO unit price is $50... BLOCKED_PRICE" | **UAT SUCCESS.** Price variance correctly detected and blocked. |
 | 2026-02-17 | C2-003 | [PASS] | "Invoice quantity (15) exceeds PO quantity (10)... BLOCKED_QTY" | **UAT SUCCESS.** Qty variance correctly detected. |
 | 2026-02-17 | C3-001.1 | [PASS] | "Invoice quantity is 5, while the PO ordered quantity is 10. Since 5 <= 10, it's a valid partial delivery." | **UAT SUCCESS.** Partial delivery accepted as READY_TO_POST. |
-| | C3-002 | [ ] | | |
+| 2026-02-17 | C3-001.2 | [PASS] | "The keyword FINAL is present... Short delivery marked as final and requires review." | **UAT SUCCESS.** Short 'Final' delivery flagged as AWAITING_INFO. |
 | | C4-001 | [ ] | | |
 | | C5-001 | [ ] | | |
 
