@@ -52,7 +52,7 @@
     {
       "parameters": {
         "promptType": "define",
-        "text": "=You are an expert AP Auditor.\nEXTRACT the following fields from the raw OCR text below and return strictly valid JSON.\n\nFields:\n- invoice_number (string)\n- po_reference (string)\n- vendor_name (string)\n- total_amount (number)\n- invoice_date (YYYY-MM-DD)\n- currency (USD/EUR)\n\nOCR TEXT:\n{{ $json.stdout }}\n\nIMPORTANT: RETURN ONLY THE JSON OBJECT. NO MARKDOWN BACKTICKS. NO DISCOUSE.\nExample: {\"invoice_number\": \"INV-123\", ...}",
+        "text": "=You are an expert AP Auditor.\nEXTRACT the following fields from the raw OCR text below and return strictly valid JSON.\n\nFields:\n- invoice_number (string)\n- po_reference (string)\n- vendor_name (string)\n- total_amount (number)\n- invoice_date (YYYY-MM-DD)\n- currency (USD/EUR)\n- line_items (array of objects: {description, quantity, unit_price, total})\n\nOCR TEXT:\n{{ $json.stdout }}\n\nIMPORTANT: RETURN ONLY THE JSON OBJECT. NO MARKDOWN BACKTICKS. NO DISCOUSE.\nExample: {\"invoice_number\": \"INV-123\", \"line_items\": [{\"description\": \"Item A\", \"quantity\": 1, \"unit_price\": 10, \"total\": 10}], ...}",
         "batching": {}
       },
       "type": "@n8n/n8n-nodes-langchain.chainLlm",
