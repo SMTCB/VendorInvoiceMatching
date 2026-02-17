@@ -265,6 +265,7 @@
       ],
       "id": "6d814dd8-1ca7-4c98-9b51-64bb118f4882",
       "name": "Execute a SQL query",
+      "executeOnce": true,
       "credentials": {
         "postgres": {
           "id": "zd9tE1ckuHzwYrry",
@@ -287,6 +288,7 @@
       "id": "a4673a6c-aadd-410c-aaab-7da19f9d6170",
       "name": "Fetch Rules1",
       "alwaysOutputData": true,
+      "executeOnce": true,
       "credentials": {
         "postgres": {
           "id": "zd9tE1ckuHzwYrry",
@@ -309,6 +311,7 @@
       "id": "657c500d-847e-4b0f-8b27-aabd798892b4",
       "name": "Fetch Examples1",
       "alwaysOutputData": true,
+      "executeOnce": true,
       "credentials": {
         "postgres": {
           "id": "zd9tE1ckuHzwYrry",
