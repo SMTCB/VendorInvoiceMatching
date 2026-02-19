@@ -1,0 +1,25 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ÔÜÖ´©Å  load multiple .env files with { path: ['.env.local', '.env'] }
+--- FULL INVOICE DUMP ---
+{
+  "id": "de4d49a3-6257-4626-9e41-06f281094139",
+  "invoice_number": "C3-001-PARTIAL",
+  "po_reference": "4500001005",
+  "vendor_name_extracted": "TechGap Solutions",
+  "total_amount": 270.63,
+  "status": "READY_TO_POST",
+  "pdf_link": null,
+  "exception_reason": "",
+  "is_test_data": false,
+  "created_at": "2026-02-17T16:55:00.020324+00:00",
+  "updated_at": "2026-02-17T16:55:05.087559+00:00",
+  "google_file_id": "19tpi1v6DcwqW6Vavq56WZ4YL1gsGjLTE",
+  "audit_trail": "Invoice C3-001-PARTIAL references PO 4500001005. Line item description 'Tech Consulting - Level 1' matches PO line item 10. Invoice quantity is 5, while the PO ordered quantity is 10. Since 5 <= 10, it's a valid partial delivery. The invoice unit price for Tech Consulting - Level 1 ($50) matches the PO unit price ($50). Total amount is within acceptable range since no other line items are present on the invoice related to PO 4500001005.",
+  "line_items": [
+    {
+      "total": 250,
+      "quantity": 5,
+      "unit_price": 50,
+      "description": "Tech Consulting - Level 1"
+    }
+  ]
+}

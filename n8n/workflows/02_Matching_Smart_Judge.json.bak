@@ -1,0 +1,342 @@
+{
+  "name": "02_Matching_Smart_Judge",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(json_agg(t), '[]'::json) as po_lines\nFROM (\n  SELECT \n    Item.po_number, \n    Item.line_item, \n    Item.material, \n    Item.ordered_qty as open_qty, \n    Item.unit_price,\n    Header.currency\n  FROM ekpo as Item\n  JOIN ekko as Header ON Item.po_number = Header.po_number\n  WHERE Item.po_number = REPLACE(REPLACE('{{ $(\"Normalize Data\").item.json.extracted_data.po_reference || \"\" }}', 'PO', ''), ' ', '')\n) t;",
+        "options": {}
+      },
+      "id": "fb0322d7-a4ef-46e9-8eb7-b8ad428a2efd",
+      "name": "Fetch PO Lines",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 1,
+      "position": [
+        384,
+        0
+      ],
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "zd9tE1ckuHzwYrry",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.extracted_data.po_reference }}",
+                    "rightValue": "",
+                    "operator": {
+                      "type": "string",
+                      "operation": "notEmpty",
+                      "singleValue": true
+                    },
+                    "id": "1e976137-715d-4497-880d-8ec04d405437"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        176,
+        0
+      ],
+      "id": "69ea7bc4-7aef-4011-9518-3c786813efb2",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "==You are an expert Accounts Payable Controller. Your task is to perform a Three-Way Match: compare the extracted INVOICE against the SAP Purchase Order (PO) data.\n\n**YOUR OBJECTIVE:**\nDecide if the invoice is \"READY_TO_POST\" or if it should be \"BLOCKED\" due to price or quantity variances.\n\n**INPUT DATA:**\n1. **CURRENT INVOICE:** {{ JSON.stringify($(\"Normalize Data\").item.json[\"extracted_data\"]) }}\n2. **SAP PO LINES:** {{ JSON.stringify($(\"Fetch PO Lines\").first().json.po_lines) }}\n3. **BUSINESS RULES:** {{ JSON.stringify($(\"Fetch Rules1\").first().json.business_rules) }}\n4. **HISTORICAL EXAMPLES:** {{ JSON.stringify($(\"Fetch Examples1\").first().json.historical_examples) }}\n\n**MATCHING LOGIC:**\n- Default tolerance is 0%.\n- **Currency Rule:** Invoice Currency (e.g., 'USD', 'EUR', '$', '€') MUST MATCH PO Currency. If mismatched (e.g., $50 vs €50), MARK AS \"BLOCKED_PRICE\" (Reason: \"Currency Mismatch: Invoice in EUR vs PO in USD\").\n- Price Rule: Invoice Unit Price must match PO Unit Price (Check `line_items` in the Current Invoice if available).\n- Quantity Rule: Invoice Qty must be less than or equal to PO Open Qty.\n  - IF Qty < PO Qty: \n    - CHECK FOR \"FINAL\"/\"CLOSED\"/\"LAST\" keywords in the Invoice text (or OCR). IF FOUND: MARK AS \"AWAITING_INFO\" (Explanation: \"Short delivery marked as Final Bill - Review required\").\n    - IF NOT FOUND: MARK AS \"READY_TO_POST\" (Valid Partial Delivery).\n  - IF Qty > PO Qty: MARK AS \"BLOCKED_QTY\".\n- Rule Exception: If a \"Validation Rule\" or \"Exception\" exists in the prompt that allows a variance, follow that rule (Priority 1).\n- Historical Exception: If the \"Historical Examples\" show a similar discrepancy was approved for this vendor previously, you may consider it valid (Priority 2).\n\n**TRACEABILITY (MANDATORY):**\nIn the `audit_trail` field, you must explain your logic. If you approve an invoice with a discrepancy, cite the specific Rule name or Historical Example. If you block it, state specifically: \"Blocked Price on Item X (Inv: $10 vs PO: $9.50)\".\n\n**OUTPUT JSON ONLY:**\n{\n  \"status\": \"READY_TO_POST\" | \"BLOCKED_PRICE\" | \"BLOCKED_QTY\" | \"AWAITING_INFO\",\n  \"exception_reason\": \"Technical summary of variance or null\",\n  \"audit_trail\": \"Explain your decision and which rules/history were applied here.\",\n  \"confidence\": 0-100\n}",
+        "batching": {}
+      },
+      "id": "69f4a5dc-7ced-412d-9b9f-a35cca656328",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        912,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "modelName": "models/gemini-2.0-flash-001",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        880,
+        224
+      ],
+      "id": "bbe2e37f-d10e-416f-9b76-9925dbbda64b",
+      "name": "Google Gemini Chat Model",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "GAGQnq629W7vOxFe",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "02_Matching_Smart_Judge Trigger"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -224,
+        208
+      ],
+      "id": "714ec845-0b34-4b2b-a9ff-f6990c125f74",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Clean up LLM output for all items\nreturn $input.all().map((item, index) => {\n  const text = item.json.text || \"\";\n  const cleanJson = text.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\n  try {\n    return { json: JSON.parse(cleanJson), pairedItem: { item: index } };\n  } catch (error) {\n    return { json: { error: \"Failed to parse JSON\", raw: text }, pairedItem: { item: index } };\n  }\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1232,
+        0
+      ],
+      "id": "3229f1b8-56a8-41aa-8ea1-54d0c9b841ba",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE invoices\nSET \n  status = COALESCE(NULLIF('{{ $json[\"status\"] }}', ''), 'AWAITING_INFO'),\n  exception_reason = {{ $json[\"error\"] ? \"'Error parsing LLM'\" : ($json[\"exception_reason\"] ? \"'\" + $json[\"exception_reason\"].replace(/'/g, \"''\") + \"'\" : \"NULL\") }},\n  audit_trail = '{{ ($json[\"audit_trail\"] || $json[\"raw\"] || \"No Output\").replace(/'/g, \"''\") }}',\n  updated_at = NOW()\nWHERE google_file_id = '{{ $(\"Normalize Data\").item.json[\"google_file_id\"] }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1440,
+        0
+      ],
+      "id": "6d814dd8-1ca7-4c98-9b51-64bb118f4882",
+      "name": "Execute a SQL query",
+      "credentials": {
+        "postgres": {
+          "id": "zd9tE1ckuHzwYrry",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(json_agg(t), '[]'::json) as business_rules\nFROM (\n  SELECT * \n  FROM validator_rules \n  WHERE is_active = true \n  AND (\n    -- Fuzzy Match: If invoice vendor contains the Rule name (e.g. 'Google Inc' contains 'Google')\n    (condition_field = 'vendor_name' AND '{{ $(\"Normalize Data\").item.json[\"extracted_data\"][\"vendor_name\"] }}' ILIKE '%' || value || '%')\n    OR\n    -- Also fetch global rules that aren't tied to a specific vendor (e.g. High Value checks)\n    (condition_field != 'vendor_name')\n  )\n) t;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        560,
+        0
+      ],
+      "id": "a4673a6c-aadd-410c-aaab-7da19f9d6170",
+      "name": "Fetch Rules1",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT COALESCE(json_agg(t), '[]'::json) as historical_examples\nFROM (\n  SELECT * \n  FROM ai_learning_examples \n  WHERE \n    -- Fuzzy Match: Find history where the stored vendor name is similar to current invoice\n    (vendor_name ILIKE '%' || split_part('{{ $(\"Normalize Data\").item.json[\"extracted_data\"][\"vendor_name\"] }}', ' ', 1) || '%')\n    OR\n    (vendor_name ILIKE '%' || '{{ $(\"Normalize Data\").item.json[\"extracted_data\"][\"vendor_name\"] }}' || '%')\n  ORDER BY created_at DESC\n  LIMIT 3\n) t;",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        308,
+        0
+      ],
+      "id": "657c500d-847e-4b0f-8b27-aabd798892b4",
+      "name": "Fetch Examples1",
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "zd9tE1ckuHzwYrry",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconsole.log('Normalize Data Input:', JSON.stringify(items));\nreturn items.map(item => {\n  if (item.json.body && item.json.body.extracted_data) {\n    console.log('Normalized Body:', JSON.stringify(item.json.body));\n    return { json: item.json.body };\n  }\n  console.log('Returned Item As Is:', JSON.stringify(item));\n  return item;\n});"
+      },
+      "name": "Normalize Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        200
+      ],
+      "id": "normalize-data-001"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "test-matching",
+        "options": {}
+      },
+      "id": "abc12345-test-hook-001",
+      "name": "Test Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -224,
+        400
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Fetch PO Lines": {
+      "main": [
+        [
+          {
+            "node": "Fetch Rules1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "Fetch PO Lines",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Normalize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Test Webhook": {
+      "main": [
+        [
+          {
+            "node": "Normalize Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Data": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Rules1": {
+      "main": [
+        [
+          {
+            "node": "Fetch Examples1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Examples1": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  }
+}

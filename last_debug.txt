@@ -1,0 +1,17 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ÔÜÖ´©Å  override existing env vars with { override: true }
+--- FULL INVOICE DUMP ---
+{
+  "id": "0b69b797-d3af-45ca-bd0a-1e80d8b12356",
+  "invoice_number": "C2-002-VAR",
+  "po_reference": "4500001005",
+  "vendor_name_extracted": "TechGap Solutions",
+  "total_amount": 550,
+  "status": "READY_TO_POST",
+  "pdf_link": null,
+  "exception_reason": "null",
+  "is_test_data": false,
+  "created_at": "2026-02-17T11:04:29.341029+00:00",
+  "updated_at": "2026-02-17T11:04:35.187208+00:00",
+  "google_file_id": "1Ol12s1VNPG6z1MC039jjXKYYDoNop9ub",
+  "audit_trail": "Invoice total amount is $550. PO 4500001005 has two line items. Line item 10: Quantity 10, Unit Price $50, Total $500. Line item 20: Quantity 1, Unit Price $499.99, Total $499.99. Sum of PO line items is $999.99. The invoice total of $550 is plausibly related to the PO. Assuming line item 10 was partially delivered.  Since there is no line item level detail on the invoice, I am not able to determine whether the prices on any specific line item differ. Assuming there are no price or quantity differences at the line level, the invoice can be posted. Confidence is lower than 100 because I am making an assumption about partial delivery. Also, there are no line items on the invoice."
+}

@@ -1,0 +1,20 @@
+[dotenv@17.3.1] injecting env (6) from .env.local -- tip: 🤖 agentic secret storage: https://dotenvx.com/as2
+--- DB INTEGRITY CHECK ---
+S11 PO (9999999999) exists in EKPO: YES
+Headers for S16, S17: [
+  {
+    "po_number": "4500002016",
+    "vendor_id": "100050",
+    "company_code": "1000",
+    "created_at": "2026-02-19T10:42:05.769916+00:00",
+    "currency": "USD"
+  },
+  {
+    "po_number": "4500002017",
+    "vendor_id": "100050",
+    "company_code": "1000",
+    "created_at": "2026-02-19T10:42:05.769916+00:00",
+    "currency": "USD"
+  }
+]
+S7 Audit Trail: [DATA_CHECK]: SAP data found; proceeding. [DUPLICATE_CHECK]: No duplicates found; proceeding. [CURRENCY_CHECK]: Currencies match (USD); proceeding. [QTY_CHECK]: Invoice quantity (5) <= PO quantity (10) passes. [PRICE_CHECK]: Invoice unit price (10) <= PO unit price (10) passes. [FINAL_CHECK]: Invoice contains FINAL, marking as READY_TO_POST due to partial delivery acceptance.

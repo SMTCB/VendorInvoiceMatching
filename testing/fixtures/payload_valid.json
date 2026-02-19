@@ -1,0 +1,18 @@
+{
+    "extracted_data": {
+        "invoice_number": "UNIT-TEST-001",
+        "po_reference": "PO4500001005",
+        "vendor_name": "TechSupply Inc",
+        "total_amount": 1250.00,
+        "currency": "USD",
+        "line_items": [
+            {
+                "description": "Laptops",
+                "quantity": 10,
+                "unit_price": 100.00
+            }
+        ],
+        "text": "INVOICE #UNIT-TEST-001 PO:4500001005 TechSupply Inc..."
+    },
+    "google_file_id": "mock_file_id_123"
+}

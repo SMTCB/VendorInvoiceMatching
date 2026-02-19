@@ -360,7 +360,7 @@
         "desc": "Duplicate Invoice Check",
         "vendor": "TechGap Solutions",
         "invoice_data": {
-            "number": "INV-S1_PERFECT",
+            "number": "INV-S1",
             "total": 100.00,
             "currency": "USD"
         },

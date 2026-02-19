@@ -1,0 +1,10 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ­ƒöÉ encrypt with Dotenvx: https://dotenvx.com
+--- VERIFICATION START ---
+--- INVOICE RECORD FOUND ---
+ID: 33621e3a-f967-4a6d-bcf2-36ee17d2be62
+Status: PROCESSING
+Vendor: TechGap Solutions
+Total: 500
+Audit Trail: null
+Exception Reason: null
+--- VERIFICATION END ---

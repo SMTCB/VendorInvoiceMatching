@@ -1,0 +1,25 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ­ƒøá´©Å  run anywhere with `dotenvx run -- yourcommand`
+--- FULL INVOICE DUMP ---
+{
+  "id": "0a6aa70a-27ad-41c1-9372-b15027361ef6",
+  "invoice_number": "C5-001-EUR",
+  "po_reference": "4500001005",
+  "vendor_name_extracted": "TechGap Solutions",
+  "total_amount": 595,
+  "status": "READY_TO_POST",
+  "pdf_link": null,
+  "exception_reason": "",
+  "is_test_data": false,
+  "created_at": "2026-02-17T17:17:22.193916+00:00",
+  "updated_at": "2026-02-17T17:17:26.243669+00:00",
+  "google_file_id": "1-PEkw4MxHWE5U5UENtSTXTiJgTg1hU6j",
+  "audit_trail": "Invoice C5-001-EUR references PO 4500001005. The invoice has one line item: Tech Consulting - Level 1, Quantity 10, Unit Price 50, Total 500. The PO has a line item for Tech Consulting - Level 1, Quantity 10, Unit Price 50. The quantities and unit prices match. The total invoice amount is 595 which accounts for other potential fees or taxes. Since all line items on the invoice match the PO, and the quantity matches the PO quantity and no tolerance issues are there, it is ready to post.",
+  "line_items": [
+    {
+      "total": 500,
+      "quantity": 10,
+      "unit_price": 50,
+      "description": "Tech Consulting - Level 1"
+    }
+  ]
+}

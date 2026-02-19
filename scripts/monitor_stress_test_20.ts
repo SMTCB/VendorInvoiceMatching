@@ -47,13 +47,12 @@ async function runStressTestAndValidate() {
         'S20_COMPLEX_AUDIT': 'BLOCKED_PRICE'
     };
 
-    // 3. Trigger & Monitor
-    const results = [];
-
-    console.log(`\nProcessing ${scenarios.length} scenarios...`);
+    // 3. Sequential Execution
+    console.log(`\nProcessing ${scenarios.length} scenarios SEQUENTIALLY...`);
 
     for (const s of scenarios) {
-        process.stdout.write(`Triggering ${s.id}... `);
+        console.log(`\n[${s.id}] Starting...`);
+        console.log(`  PO Ref from Scenario: "${s.po_data?.number}"`);
 
         const invNum = s.invoice_data.number;
         const payload = {
@@ -61,32 +60,27 @@ async function runStressTestAndValidate() {
             extracted_data: {
                 invoice_number: invNum,
                 po_reference: s.po_data?.number || '',
-                vendor_name: s.vendor, // Simulate OCR extracted name
+                vendor_name: s.vendor,
                 total_amount: s.invoice_data.total,
                 currency: s.invoice_data.currency,
-                line_items: [s.line_item, ...(s.extra_inv_lines || [])],
+                line_items: s.extra_inv_lines ? [...[s.line_item], ...s.extra_inv_lines] : [s.line_item],
                 text: s.text_content || `OCR Text for ${s.desc}`
             }
         };
 
         try {
-            // A. Ensure Record Exists (Simulate Ingestion)
-            const { error: upsertKey } = await supabase.from('invoices').upsert({
+            // A. Reset & Upsert
+            await supabase.from('invoices').upsert({
                 invoice_number: invNum,
                 google_file_id: payload.google_file_id,
                 vendor_name_extracted: s.vendor,
                 total_amount: s.invoice_data.total,
                 currency: s.invoice_data.currency,
-                status: 'PROCESSING', // Reset status for test
-                audit_trail: 'Simulation Started',
+                status: 'PROCESSING',
+                audit_trail: 'Sequential Run Started',
                 po_reference: payload.extracted_data.po_reference,
-                line_items: JSON.stringify(payload.extracted_data.line_items) // Ensure stringified JSON for safety
+                line_items: JSON.stringify(payload.extracted_data.line_items)
             }, { onConflict: 'google_file_id' });
-
-            if (upsertKey) {
-                console.log(`❌ Upsert Failed for ${invNum}: ${upsertKey.message}`);
-                continue; // Skip webhook if upsert failed
-            }
 
             // B. Trigger Webhook
             const response = await fetch(WEBHOOK_URL, {
@@ -95,73 +89,45 @@ async function runStressTestAndValidate() {
                 body: JSON.stringify(payload)
             });
 
-            if (response.ok) {
-                console.log('✔ Triggered OK');
-            } else {
-                console.log(`❌ Webhook Failed (${response.status})`);
+            if (!response.ok) {
+                console.log(`  ❌ Webhook Failed (${response.status})`);
+                continue;
             }
 
+            // C. Poll for completion of THIS specific invoice
+            let finished = false;
+            let attempts = 0;
+            while (!finished && attempts < 40) {
+                await new Promise(r => setTimeout(r, 2000));
+                const { data: rec } = await supabase
+                    .from('invoices')
+                    .select('status, exception_reason, audit_trail')
+                    .eq('google_file_id', payload.google_file_id)
+                    .single();
+
+                if (rec && rec.status !== 'PROCESSING') {
+                    finished = true;
+                    const expected = expectations[s.id] || 'READY_TO_POST';
+                    const actual = rec.status;
+                    const isMatch = actual === expected || (expected.startsWith('BLOCKED') && actual.startsWith('BLOCKED'));
+                    const icon = isMatch ? '✅' : '❌';
+
+                    console.log(`  Result: ${icon} ${actual} (Expected: ${expected})`);
+                    if (!isMatch) {
+                        console.log(`  > Reason: ${rec.exception_reason}`);
+                        console.log(`  > Audit: ${rec.audit_trail}`);
+                    }
+                }
+                attempts++;
+            }
+
+            if (!finished) console.log('  ⏳ Timeout waiting for n8n...');
+
         } catch (e) {
-            console.log(`❌ Error: ${e.message}`);
-        }
-
-        // Small delay to prevent rate limit on local n8n
-        await new Promise(r => setTimeout(r, 500));
-    }
-
-
-    // 4. Polling for Results
-    console.log('\nWaiting for processing (Max 90s)...');
-
-    // Check every 3s for up to 90s
-    for (let i = 0; i < 30; i++) {
-        await new Promise(r => setTimeout(r, 3000));
-
-        // Count finished
-        const { data: pending } = await supabase
-            .from('invoices')
-            .select('invoice_number')
-            .eq('status', 'PROCESSING')
-            .in('invoice_number', scenarios.map(s => s.invoice_data.number));
-
-        const pendingCount = pending?.length || 0;
-        process.stdout.write(`\r[${i + 1}/15] Pending: ${pendingCount}   `);
-
-        if (pendingCount === 0) break;
-    }
-    console.log('\n');
-
-    // 5. Validation
-    console.log('---------------------------------------------------------------------------------');
-    console.log('| ID                 | Invoice      | Expected       | Actual         | Pass? |');
-    console.log('---------------------------------------------------------------------------------');
-
-    let passCount = 0;
-
-    for (const s of scenarios) {
-        const invNum = s.invoice_data.number;
-        const expected = expectations[s.id] || 'READY_TO_POST';
-
-        const { data: rec } = await supabase
-            .from('invoices')
-            .select('status, exception_reason')
-            .eq('invoice_number', invNum)
-            .single();
-
-        const actual = rec?.status || 'NOT_FOUND';
-
-        // Fuzzy Status Check (e.g. BLOCKED vs BLOCKED_PRICE)
-        const isMatch = actual === expected || (expected.startsWith('BLOCKED') && actual.startsWith('BLOCKED'));
-
-        if (isMatch) passCount++;
-
-        const icon = isMatch ? '✅' : '❌';
-        console.log(`| ${s.id.padEnd(18)} | ${invNum.padEnd(12)} | ${expected.padEnd(14)} | ${actual.padEnd(14)} | ${icon}   |`);
-
-        if (!isMatch && rec) {
-            console.log(`  > Reason: ${rec.exception_reason}`);
+            console.log(`  ❌ Error: ${e.message}`);
         }
     }
+    console.log('\n--- SEQUENTIAL RUN COMPLETE ---');
     console.log('---------------------------------------------------------------------------------');
     console.log(`Summary: ${passCount}/${scenarios.length} scenarios passed.`);
 }

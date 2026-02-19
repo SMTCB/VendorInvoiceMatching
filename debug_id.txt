@@ -1,0 +1,17 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ÔÜÖ´©Å  suppress all logs with { quiet: true }
+--- FULL INVOICE DUMP ---
+{
+  "id": "fb08ddd8-e179-4c8d-b177-24f71b783ef3",
+  "invoice_number": "C2-002-VAR",
+  "po_reference": "4500001005",
+  "vendor_name_extracted": "TechGap Solutions",
+  "total_amount": 550,
+  "status": "PROCESSING",
+  "pdf_link": null,
+  "exception_reason": null,
+  "is_test_data": false,
+  "created_at": "2026-02-17T11:24:59.867443+00:00",
+  "updated_at": "2026-02-17T11:24:59.867443+00:00",
+  "google_file_id": "1ax5_gA4c-_qN093L57J_WRMkI91QipFd",
+  "audit_trail": null
+}

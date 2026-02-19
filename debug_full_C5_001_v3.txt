@@ -1,0 +1,26 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ÔÜÖ´©Å  enable debug logging with { debug: true }
+--- FULL INVOICE DUMP ---
+{
+  "id": "ff221af2-23e2-40ea-a2a4-bd39db32e5a2",
+  "invoice_number": "C5-001-EUR",
+  "po_reference": "4500001005",
+  "vendor_name_extracted": "TechGap Solutions",
+  "total_amount": 595,
+  "status": "READY_TO_POST",
+  "pdf_link": null,
+  "exception_reason": "",
+  "is_test_data": false,
+  "created_at": "2026-02-17T17:22:36.745871+00:00",
+  "updated_at": "2026-02-17T17:22:41.243922+00:00",
+  "google_file_id": "1OCBo6hQIQtMJUdVjiG5SRgHorWHF4kIC",
+  "audit_trail": "Invoice C5-001-EUR references PO 4500001005. Invoice total is 595 EUR. The invoice contains one line item: Tech Consulting - Level 1, quantity 10, unit price 50 EUR, total 500 EUR. PO 4500001005 has two line items. Line item 10: Tech Consulting - Level 1, ordered quantity 10, unit price 50 EUR. Line item 20 is irrelevant as it is not present on the invoice. The invoice quantity and unit price for the first line item match the PO exactly. Total invoice amount matches the line item total plus an additional 95 EUR. Assuming this is for taxes/other charges which are not verified. The invoice is therefore deemed READY_TO_POST.",
+  "line_items": [
+    {
+      "total": 500,
+      "quantity": 10,
+      "unit_price": 50,
+      "description": "Tech Consulting - Level 1"
+    }
+  ],
+  "currency": "EUR"
+}

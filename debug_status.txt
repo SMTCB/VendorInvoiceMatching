@@ -1,0 +1,26 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ÔÜÖ´©Å  write to custom object with { processEnv: myObject }
+--- FULL INVOICE DUMP ---
+{
+  "id": "2002d1ed-c7d5-4577-9a3e-49c0292e9f5b",
+  "invoice_number": "C5-001-EUR",
+  "po_reference": "4500001005",
+  "vendor_name_extracted": "TechGap Solutions",
+  "total_amount": 595,
+  "status": "PROCESSING",
+  "pdf_link": null,
+  "exception_reason": null,
+  "is_test_data": false,
+  "created_at": "2026-02-17T18:16:24.770501+00:00",
+  "updated_at": "2026-02-17T18:16:24.770501+00:00",
+  "google_file_id": "1LYu1ufxPeCRr2sjjfxsdLbT0EkmxD1Jt",
+  "audit_trail": null,
+  "line_items": [
+    {
+      "total": 500,
+      "quantity": 10,
+      "unit_price": 50,
+      "description": "Tech Consulting - Level 1"
+    }
+  ],
+  "currency": "EUR"
+}

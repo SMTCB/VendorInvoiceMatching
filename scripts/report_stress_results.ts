@@ -50,7 +50,7 @@ async function reportResults() {
         const { data: rec } = await supabase
             .from('invoices')
             .select('status, exception_reason')
-            .eq('invoice_number', invNum)
+            .eq('google_file_id', `gdrive_${s.id}`)
             .single();
 
         const actual = rec?.status || 'NOT_FOUND';

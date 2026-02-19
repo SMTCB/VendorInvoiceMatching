@@ -1,0 +1,2 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ÔÜÖ´©Å  specify custom .env file path with { path: '/custom/path/.env' }
+[AWAITING_INFO] TechGap Solutions - Total: 550 - PO: 4500001005 - Trail: Invoice data is not provided, therefore a three-way match cannot be performed. Status set to AWAITING_INFO.

@@ -1,0 +1,25 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ÔÜÖ´©Å  suppress all logs with { quiet: true }
+--- FULL INVOICE DUMP ---
+{
+  "id": "f9be67b1-01c9-4c4a-a632-a18c426e4abd",
+  "invoice_number": "C2-002-VAR",
+  "po_reference": "4500001005",
+  "vendor_name_extracted": "TechGap Solutions",
+  "total_amount": 550,
+  "status": "BLOCKED_PRICE",
+  "pdf_link": null,
+  "exception_reason": "Price variance detected between invoice and PO for line item: Generic Consulting Service. Invoice unit price is $55, while PO unit price is $50.",
+  "is_test_data": false,
+  "created_at": "2026-02-17T12:25:51.045912+00:00",
+  "updated_at": "2026-02-17T12:25:54.994127+00:00",
+  "google_file_id": "1uDX-JZlwRRlZpmQmEn9g7wc1jAFYImX0",
+  "audit_trail": "Invoice C2-002-VAR references PO 4500001005. Line item 'Generic Consulting Service' on the invoice has a unit price of $55. The corresponding PO line item 10 'Tech Consulting - Level 1' has a unit price of $50. Since there is a price discrepancy and no applicable exception rule or historical example, the invoice is blocked due to price variance.",
+  "line_items": [
+    {
+      "total": 550,
+      "quantity": 10,
+      "unit_price": 55,
+      "description": "Generic Consulting Service"
+    }
+  ]
+}

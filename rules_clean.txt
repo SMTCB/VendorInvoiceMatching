@@ -1,0 +1,7 @@
+﻿[dotenv@17.3.1] injecting env (6) from .env.local -- tip: ÔÜÖ´©Å  override existing env vars with { override: true }
+--- RULES ---
+[1d78e4fa-33ab-4634-98d1-eaba4c214423] TechParts Auto-Approve: vendor_name equals TechParts Ltd -> auto_approve
+[ca74bddf-c455-4aed-821e-bafc6ffee7e5] High Value Threshold: total_amount greater_than 5000 -> flag_review
+
+--- AI EXAMPLES ---
+[null] undefined: undefined -> undefined (undefined)

@@ -1,0 +1,22 @@
+[dotenv@17.3.1] injecting env (6) from .env.local -- tip: ⚙️  specify custom .env file path with { path: '/custom/path/.env' }
+--- S11 DATA PEEK ---
+EKKO: [
+  {
+    po_number: '9999999999',
+    vendor_id: '100050',
+    company_code: '1000',
+    created_at: '2026-02-19T10:42:05.769916+00:00',
+    currency: 'USD'
+  }
+]
+EKPO: [
+  {
+    id: 'cdce19cf-3c71-4253-9d48-b9160613fa64',
+    po_number: '9999999999',
+    line_item: 10,
+    material: 'MAT-S11_INVALID_PO',
+    ordered_qty: 10,
+    unit_price: 10,
+    created_at: '2026-02-19T10:44:04.286075+00:00'
+  }
+]

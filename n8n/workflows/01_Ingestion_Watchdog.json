@@ -38,7 +38,7 @@
     },
     {
       "parameters": {
-        "jsCode": "/* ROBUST OCR: Ghostscript -> TIFF -> Tesseract */\nconst { execSync } = require('child_process');\nconst fs = require('fs');\n\n// 1. Get the REAL binary data using helper\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\nif (!buffer) return [{ json: { error: \"No data found\" } }];\n\nconst pdfPath = '/tmp/robust_invoice.pdf';\nconst tiffPath = '/tmp/robust_invoice.tiff';\n\ntry {\n  fs.writeFileSync(pdfPath, buffer);\n  execSync(`gs -q -dNOPAUSE -r300 -sDEVICE=tiffg4 -sOutputFile=${tiffPath} ${pdfPath} -c quit`);\n  const stdout = execSync(`tesseract ${tiffPath} stdout`).toString();\n  if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);\n  if (fs.existsSync(tiffPath)) fs.unlinkSync(tiffPath);\n  return [{ json: { stdout } }];\n} catch (error) {\n  throw new Error('OCR Failed: ' + error.message);\n}"
+        "jsCode": "/* ROBUST OCR: Ghostscript -> TIFF -> Tesseract */\nconst { execSync } = require('child_process');\nconst fs = require('fs');\n\n// 1. Get the REAL binary data for the current item\nconst buffer = await this.helpers.getBinaryDataBuffer(0, 'data');\n\nif (!buffer) return { error: \"No data found\" };\n\nconst pdfPath = '/tmp/robust_invoice.pdf';\nconst tiffPath = '/tmp/robust_invoice.tiff';\n\ntry {\n  fs.writeFileSync(pdfPath, buffer);\n  execSync(`gs -q -dNOPAUSE -r300 -sDEVICE=tiffg4 -sOutputFile=${tiffPath} ${pdfPath} -c quit`);\n  const stdout = execSync(`tesseract ${tiffPath} stdout`).toString();\n  if (fs.existsSync(pdfPath)) fs.unlinkSync(pdfPath);\n  if (fs.existsSync(tiffPath)) fs.unlinkSync(tiffPath);\n  return { stdout };\n} catch (error) {\n  throw new Error('OCR Failed: ' + error.message);\n}"
       },
       "id": "440699bf-e24b-4fe4-a43a-391a75023f22",
       "name": "Run Tesseract OCR (Code Node)",
@@ -174,8 +174,8 @@
         "workflowInputs": {
           "mappingMode": "defineBelow",
           "value": {
-            "google_file_id": "={{ $(\"Download file\").first().json.id }}",
-            "extracted_data": "={{ $json }}"
+            "google_file_id": "={{ $(\"Download file\").json.id }}",
+            "extracted_data": "={{ Object.assign({}, $(\"Code in JavaScript\").item.json, { ocr_text: $(\"Run Tesseract OCR (Code Node)\").item.json.stdout }) }}"
           }
         },
         "options": {}
@@ -238,7 +238,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Clean up extraction\nconst text = $input.item.json.text || \"\";\nconst cleanJson = text.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\ntry {\n  return JSON.parse(cleanJson);\n} catch (error) {\n  return { error: \"Failed to parse JSON\", raw: text };\n}"
+        "jsCode": "// Clean up extraction for current item\nconst text = $json.text || \"\";\nconst cleanJson = text.replace(/```json/g, \"\").replace(/```/g, \"\").trim();\ntry {\n  return JSON.parse(cleanJson);\n} catch (error) {\n  return { error: \"Failed to parse JSON\", raw: text };\n}"
       },
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -248,6 +248,20 @@
       ],
       "id": "3c3987e1-d17c-43df-b91a-8e47b1cb3adf",
       "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        112,
+        -144
+      ],
+      "id": "sequential-iterator",
+      "name": "Process One by One"
     }
   ],
   "pinData": {},
@@ -333,7 +347,29 @@
       "main": [
         [
           {
+            "node": "Process One by One",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process One by One": {
+      "main": [
+        [
+          {
             "node": "Download file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call '02_Matching_Smart_Judge'": {
+      "main": [
+        [
+          {
+            "node": "Process One by One",
             "type": "main",
             "index": 0
           }

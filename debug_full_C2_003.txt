@@ -1,0 +1,25 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ­ƒñû agentic secret storage: https://dotenvx.com/as2
+--- FULL INVOICE DUMP ---
+{
+  "id": "98d00301-1c33-41d3-9306-74e8f739957a",
+  "invoice_number": "C2-003-QTY",
+  "po_reference": "4500001005",
+  "vendor_name_extracted": "TechGap Solutions",
+  "total_amount": 811.88,
+  "status": "BLOCKED_QTY",
+  "pdf_link": null,
+  "exception_reason": "Invoice quantity exceeds PO quantity for Tech Consulting - Level 1.",
+  "is_test_data": false,
+  "created_at": "2026-02-17T16:08:12.227982+00:00",
+  "updated_at": "2026-02-17T16:08:15.920294+00:00",
+  "google_file_id": "1Xj1jN_ajCpjT9KPaS8ZDGVEi5TfztpZP",
+  "audit_trail": "Invoice line item 'Tech Consulting - Level 1' has a quantity of 15, while the corresponding PO line item (4500001005 line 10) has an ordered quantity of 10. Invoice quantity exceeds the PO quantity. Therefore, the invoice is blocked due to quantity variance.",
+  "line_items": [
+    {
+      "total": 750,
+      "quantity": 15,
+      "unit_price": 50,
+      "description": "Tech Consulting - Level 1"
+    }
+  ]
+}

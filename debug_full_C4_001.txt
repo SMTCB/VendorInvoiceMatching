@@ -1,0 +1,25 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ÔÜÖ´©Å  override existing env vars with { override: true }
+--- FULL INVOICE DUMP ---
+{
+  "id": "860b3433-1460-4dfa-aae2-16ce046f2df4",
+  "invoice_number": "C4-001-VENDOR",
+  "po_reference": "4500001005",
+  "vendor_name_extracted": "Tech Gap Inc.",
+  "total_amount": 541.25,
+  "status": "READY_TO_POST",
+  "pdf_link": null,
+  "exception_reason": "",
+  "is_test_data": false,
+  "created_at": "2026-02-17T17:06:48.86+00:00",
+  "updated_at": "2026-02-17T17:06:52.717941+00:00",
+  "google_file_id": "1Z66vOfd9uWJJdrIU43G-WrMMv1u2t5EB",
+  "audit_trail": "Invoice C4-001-VENDOR matches PO 4500001005. Line item 10 on the PO matches the invoice line item: quantity is 10, unit price is $50. Total amount of $500 for the line item matches. The invoice does not exceed the PO quantity and the unit price matches exactly. Line item 20 of the PO is not on the invoice. The invoice amount of $541.25 is within a reasonable tolerance of the line items included. Since all quantities and prices match for the provided line item, the invoice is approved. ",
+  "line_items": [
+    {
+      "total": 500,
+      "quantity": 10,
+      "unit_price": 50,
+      "description": "Tech Consulting - Level 1"
+    }
+  ]
+}

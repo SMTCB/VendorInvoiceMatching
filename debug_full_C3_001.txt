@@ -1,0 +1,25 @@
+﻿[dotenv@17.3.1] injecting env (5) from .env -- tip: ÔÜí´©Å secrets for agents: https://dotenvx.com/as2
+--- FULL INVOICE DUMP ---
+{
+  "id": "a9d9354a-d4aa-4249-9845-b4ff875a0cc8",
+  "invoice_number": "C3-001-PARTIAL",
+  "po_reference": "4500001005",
+  "vendor_name_extracted": "TechGap Solutions",
+  "total_amount": 270.63,
+  "status": "BLOCKED_QTY",
+  "pdf_link": null,
+  "exception_reason": "Invoice quantity exceeds PO quantity for Tech Consulting - Level 1.",
+  "is_test_data": false,
+  "created_at": "2026-02-17T16:50:05.295654+00:00",
+  "updated_at": "2026-02-17T16:50:09.873869+00:00",
+  "google_file_id": "1FGlMZQMC6WxafgXt2apqpfpbwnb09kNK",
+  "audit_trail": "The invoice has a line item for 'Tech Consulting - Level 1' with a quantity of 5 and a unit price of $50, totaling $250. The corresponding PO line item (line_item 10) also has a unit price of $50 for 'Tech Consulting - Level 1', but the ordered quantity is 10. The invoice quantity (5) is less than or equal to the ordered quantity (10), and therefore the quantity rule should pass. However, based on the business requirement, all invoices quantities must match. The PO does not specify if this is a partial invoice.",
+  "line_items": [
+    {
+      "total": 250,
+      "quantity": 5,
+      "unit_price": 50,
+      "description": "Tech Consulting - Level 1"
+    }
+  ]
+}

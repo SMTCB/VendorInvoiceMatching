@@ -116,13 +116,11 @@ async function seedStressData() {
         // AI Seeding
         if (s.ai_seed) {
             ai_examples.push({
-                vendor_name: s.vendor, // Or extracted name
-                field: s.ai_seed.field,
-                original_value: s.ai_seed.original, // e.g. 10.00
-                corrected_value: s.ai_seed.new, // e.g. 10.50
-                reason: s.ai_seed.reason,
-                action: 'APPROVED_VARIANCE', // valid enum?
-                created_at: new Date(Date.now() - 86400000).toISOString() // Yesterday
+                vendor_name: s.vendor,
+                scenario_description: `${s.ai_seed.field} Mismatch (${s.ai_seed.original} -> ${s.ai_seed.new})`,
+                user_rationale: s.ai_seed.reason,
+                expected_status: 'READY_TO_POST',
+                created_at: new Date(Date.now() - 86400000).toISOString()
             });
         }
     }
@@ -156,22 +154,17 @@ async function seedStressData() {
     if (uniqueEkpo.length) {
         const { error: ekpoErr } = await supabase.from('ekpo').upsert(uniqueEkpo, { onConflict: 'po_number,line_item' });
         if (ekpoErr) console.error('Error upserting ekpo:', ekpoErr);
-
-        const { count } = await supabase.from('ekpo').select('*', { count: 'exact', head: true });
-        console.log('Total EKPO Count after upsert:', count);
     }
     if (mseg.length) {
-        // Just insert for now, or use a composite key if available.
-        // If we want to avoid duplicates on re-seed, we should maybe truncate table first? 
-        // But for S14, it's intentionally same data.
-        const { error: msegErr } = await supabase.from('mseg').insert(mseg); // Changed to insert since no PK/Unique defined easily
+        const { error: msegErr } = await supabase.from('mseg').insert(mseg);
         if (msegErr) console.error('Error inserting mseg:', msegErr);
     }
 
     // AI Examples
     if (ai_examples.length) {
         console.log('Seeding AI Examples...');
-        await supabase.from('ai_learning_examples').upsert(ai_examples);
+        const { error: aiErr } = await supabase.from('ai_learning_examples').upsert(ai_examples);
+        if (aiErr) console.error('Error upserting AI Examples:', aiErr);
     }
 
     console.log(`✔ Seeded: ${ekko.length} POs, ${ekpo.length} Lines, ${mseg.length} GRs.`);

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 import {
     ArrowLeft,
     CheckCircle,
@@ -72,9 +73,17 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
     }, [isProcessing, router]);
 
     const handleSendInquiry = async () => {
+        if (!inquiryNote.trim()) {
+            alert('Please enter a note for the vendor before sending an inquiry.');
+            return;
+        }
         if (!window.confirm('Send inquiry email to vendor?')) return;
+
         try {
-            const response = await fetch('YOUR_N8N_INQUIRY_WEBHOOK_URL', {
+            const webhookUrl = process.env.NEXT_PUBLIC_N8N_INQUIRY_WEBHOOK_URL;
+            if (!webhookUrl) throw new Error('Inquiry webhook URL not configured');
+
+            const response = await fetch(webhookUrl, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -85,14 +94,63 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                     custom_note: inquiryNote
                 })
             });
+
             if (response.ok) {
                 alert('Inquiry sent successfully!');
                 setInquiryNote('');
+                router.refresh();
             } else {
-                alert('Demo: Inquiry email trigger simulated successfully.');
+                const errData = await response.text();
+                console.error('N8N Error:', errData);
+                alert('Failed to trigger inquiry workflow. Please check N8N status.');
             }
         } catch (e) {
-            alert('Demo: Inquiry email trigger simulated successfully.');
+            console.error('Inquiry Error:', e);
+            alert('Error connecting to inquiry service.');
+        }
+    };
+    const handlePark = async () => {
+        if (!window.confirm('Are you sure you want to PARK this invoice?')) return;
+        try {
+            const supabase = createClient();
+            const { error } = await supabase
+                .from('invoices')
+                .update({ status: 'PARKED' })
+                .eq('id', invoice.id);
+
+            if (error) throw error;
+            alert('Invoice PARKED successfully.');
+            router.refresh();
+        } catch (e) {
+            console.error('Error parking invoice:', e);
+            alert('Failed to park invoice.');
+        }
+    };
+    const handleTrainAI = async () => {
+        if (!inquiryNote.trim()) {
+            alert('Please explain the rationale in the memo field before training the AI.');
+            return;
+        }
+        if (!window.confirm('Add this scenario to AI Training data?')) return;
+
+        try {
+            const supabase = createClient();
+            const { error } = await supabase
+                .from('ai_learning_examples')
+                .insert({
+                    invoice_id: invoice.id,
+                    vendor_name: invoice.vendor_name_extracted,
+                    scenario_description: invoice.exception_reason || 'Manual classification',
+                    user_rationale: inquiryNote,
+                    expected_status: 'READY_TO_POST'
+                });
+
+            if (error) throw error;
+            alert('AI training sample submitted successfully.');
+            setInquiryNote('');
+        } catch (e) {
+            console.error('Error training AI:', e);
+            alert('Failed to save learning example.');
         }
     };
 
@@ -140,12 +198,15 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                         Send Inquiry
                     </button>
                     <button
-                        onClick={() => alert('Demo: Invoice status updated to "PARKED".')}
+                        onClick={handlePark}
                         className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all shadow-sm"
                     >
                         Park
                     </button>
-                    <button className="bg-brand-blue hover:bg-brand-blue/90 text-white px-5 py-2 rounded-xl text-xs font-black shadow-lg shadow-brand-blue/30 flex items-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.98]">
+                    <button
+                        className="bg-brand-blue hover:bg-brand-blue/90 text-white px-5 py-2 rounded-xl text-xs font-black shadow-lg shadow-brand-blue/30 flex items-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.98]"
+                        onClick={() => alert('Demo: Final approval triggered.')}
+                    >
                         <CheckCircle size={14} className="text-brand-cyan" />
                         POST INVOICE
                     </button>
@@ -257,7 +318,7 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                                                 </div>
                                                                 <div>
                                                                     <span className="text-[10px] font-black text-indigo-900/50 uppercase tracking-widest block mb-0.5">AI Insight & Policy Check</span>
-                                                                    <p className="text-sm font-medium text-indigo-900 italic">"{invoice.audit_trail}"</p>
+                                                                    <p className="text-sm font-medium text-indigo-900 italic">&quot;{invoice.audit_trail}&quot;</p>
                                                                 </div>
                                                             </div>
                                                         )}
@@ -279,9 +340,10 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                                                 Send Vendor Inquiry
                                                             </button>
                                                             <button
-                                                                onClick={() => alert('Demo: Insight saved to AI knowledge base.')}
-                                                                className="text-[10px] bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg font-black uppercase tracking-widest hover:bg-slate-50 transition-all shadow-sm"
+                                                                onClick={handleTrainAI}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-navy/5 hover:bg-brand-navy/10 text-brand-navy text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border border-brand-navy/5"
                                                             >
+                                                                <Zap size={12} className="text-brand-yellow fill-brand-yellow" />
                                                                 Train AI on this Match
                                                             </button>
                                                         </div>
@@ -307,7 +369,7 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                                         </div>
                                                         <div>
                                                             <span className="text-[10px] font-black text-emerald-900/50 uppercase tracking-widest block mb-0.5">AI Insight</span>
-                                                            <p className="text-sm font-medium text-emerald-900 italic">"{invoice.audit_trail}"</p>
+                                                            <p className="text-sm font-medium text-emerald-900 italic">&quot;{invoice.audit_trail}&quot;</p>
                                                         </div>
                                                     </div>
                                                 )}
@@ -390,7 +452,7 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                 }
             `}</style>
         </div>
-    )
+    );
 }
 
 function TabButton({ active, onClick, icon, label }: { active: boolean, onClick: () => void, icon: React.ReactNode, label: string }) {
