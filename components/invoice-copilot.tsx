@@ -52,18 +52,44 @@ export function InvoiceCopilot({ invoiceNumber, vendorName, status, exceptionRea
         setInput('');
         setIsThinking(true);
 
-        // Simulate AI processing delay
-        setTimeout(() => {
-            const response = generateMockResponse(input, { invoiceNumber, vendorName, status, exceptionReason });
+        try {
+            const response = await fetch('/api/copilot', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: input,
+                    invoiceId: invoiceNumber, // Using invoiceNumber as display ID
+                    context: {
+                        vendorName,
+                        status,
+                        exceptionReason
+                    }
+                })
+            });
+
+            if (!response.ok) throw new Error('Failed to fetch AI response');
+
+            const data = await response.json();
+
             const aiMsg: Message = {
                 id: (Date.now() + 1).toString(),
                 role: 'assistant',
-                content: response,
+                content: data.text,
                 timestamp: new Date()
             };
             setMessages(prev => [...prev, aiMsg]);
+        } catch (e) {
+            console.error('Copilot Error:', e);
+            const errorMsg: Message = {
+                id: (Date.now() + 1).toString(),
+                role: 'assistant',
+                content: "I apologize, but I'm having trouble connecting to my intelligence engine. Please ensure your Gemini API Key is valid.",
+                timestamp: new Date()
+            };
+            setMessages(prev => [...prev, errorMsg]);
+        } finally {
             setIsThinking(false);
-        }, 1500);
+        }
     };
 
     const handleQuickAction = (action: string) => {

@@ -72,6 +72,8 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
         return () => clearInterval(interval);
     }, [isProcessing, router]);
 
+    const [loading, setLoading] = useState(false);
+
     const handleSendInquiry = async () => {
         if (!inquiryNote.trim()) {
             alert('Please enter a note for the vendor before sending an inquiry.');
@@ -79,6 +81,7 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
         }
         if (!window.confirm('Send inquiry email to vendor?')) return;
 
+        setLoading(true);
         try {
             const webhookUrl = process.env.NEXT_PUBLIC_N8N_INQUIRY_WEBHOOK_URL;
             if (!webhookUrl) throw new Error('Inquiry webhook URL not configured');
@@ -107,23 +110,56 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
         } catch (e) {
             console.error('Inquiry Error:', e);
             alert('Error connecting to inquiry service.');
+        } finally {
+            setLoading(false);
         }
     };
-    const handlePark = async () => {
-        if (!window.confirm('Are you sure you want to PARK this invoice?')) return;
+
+    const handlePost = async () => {
+        if (!window.confirm('Post this invoice for final payment?')) return;
+        setLoading(true);
         try {
             const supabase = createClient();
             const { error } = await supabase
                 .from('invoices')
-                .update({ status: 'PARKED' })
+                .update({ status: 'POSTED' })
                 .eq('id', invoice.id);
 
             if (error) throw error;
-            alert('Invoice PARKED successfully.');
+            alert('Invoice POSTED successfully. It will now be archived in the Document Hub.');
+            router.push('/'); // Redirect to dashboard
             router.refresh();
         } catch (e) {
-            console.error('Error parking invoice:', e);
-            alert('Failed to park invoice.');
+            console.error('Error posting invoice:', e);
+            alert('Failed to post invoice.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handlePark = async () => {
+        const isCurrentlyParked = invoice.status === 'PARKED';
+        const confirmMsg = isCurrentlyParked
+            ? 'Release this invoice from Parked status and return to Processing?'
+            : 'Are you sure you want to PARK this invoice?';
+
+        if (!window.confirm(confirmMsg)) return;
+        setLoading(true);
+        try {
+            const supabase = createClient();
+            const { error } = await supabase
+                .from('invoices')
+                .update({ status: isCurrentlyParked ? 'PROCESSING' : 'PARKED' })
+                .eq('id', invoice.id);
+
+            if (error) throw error;
+            alert(`Invoice ${isCurrentlyParked ? 'RELEASED' : 'PARKED'} successfully.`);
+            router.refresh();
+        } catch (e) {
+            console.error('Error toggling park status:', e);
+            alert('Failed to update invoice status.');
+        } finally {
+            setLoading(false);
         }
     };
     const handleTrainAI = async () => {
@@ -131,11 +167,14 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
             alert('Please explain the rationale in the memo field before training the AI.');
             return;
         }
-        if (!window.confirm('Add this scenario to AI Training data?')) return;
+        if (!window.confirm('Add this scenario to AI Training data and create a new Rule?')) return;
 
+        setLoading(true);
         try {
             const supabase = createClient();
-            const { error } = await supabase
+
+            // 1. Add to Learning Examples
+            const { error: learningError } = await supabase
                 .from('ai_learning_examples')
                 .insert({
                     invoice_id: invoice.id,
@@ -145,12 +184,27 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                     expected_status: 'READY_TO_POST'
                 });
 
-            if (error) throw error;
-            alert('AI training sample submitted successfully.');
+            if (learningError) throw learningError;
+
+            // 2. Proactively create a rule if applicable (POC simple rule)
+            await supabase
+                .from('validator_rules')
+                .insert({
+                    name: `Override: ${invoice.vendor_name_extracted}`,
+                    condition_field: 'vendor_name',
+                    operator: 'equals',
+                    value: invoice.vendor_name_extracted,
+                    action: 'auto_approve',
+                    is_active: true
+                });
+
+            alert('AI training sample submitted and Rule created successfully.');
             setInquiryNote('');
         } catch (e) {
             console.error('Error training AI:', e);
             alert('Failed to save learning example.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -191,24 +245,21 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                             </div>
                         </div>
                     </div>
-                    <button
-                        onClick={handleSendInquiry}
-                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all"
-                    >
-                        Send Inquiry
-                    </button>
+
                     <button
                         onClick={handlePark}
-                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all shadow-sm"
+                        disabled={loading}
+                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all shadow-sm disabled:opacity-50"
                     >
-                        Park
+                        {invoice.status === 'PARKED' ? 'Release' : 'Park'}
                     </button>
                     <button
-                        className="bg-brand-blue hover:bg-brand-blue/90 text-white px-5 py-2 rounded-xl text-xs font-black shadow-lg shadow-brand-blue/30 flex items-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.98]"
-                        onClick={() => alert('Demo: Final approval triggered.')}
+                        disabled={loading || invoice.status === 'POSTED'}
+                        className="bg-brand-blue hover:bg-brand-blue/90 text-white px-5 py-2 rounded-xl text-xs font-black shadow-lg shadow-brand-blue/30 flex items-center gap-2 transition-all hover:scale-[1.03] active:scale-[0.98] disabled:opacity-50 disabled:grayscale"
+                        onClick={handlePost}
                     >
                         <CheckCircle size={14} className="text-brand-cyan" />
-                        POST INVOICE
+                        {loading ? 'POSTING...' : 'POST INVOICE'}
                     </button>
                 </div>
             </header>
@@ -218,59 +269,46 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
             <div className="flex-1 flex overflow-hidden">
 
                 {/* Left Panel: Document Hub */}
-                <div className="w-[45%] bg-[#F1F5F9] border-r border-slate-200 flex flex-col relative group">
-                    <div className="bg-slate-900/5 backdrop-blur px-6 py-3 flex items-center justify-between border-b border-slate-200">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-500 flex items-center gap-2">
-                            <FileText size={12} className="text-brand-blue" /> Intelligent Scan Hub
+                <div className="bg-slate-900/40 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-2xl flex-1 flex flex-col min-h-[600px] relative overflow-hidden group">
+                    <div className="flex items-center justify-between mb-4">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                            <FileText size={12} className="text-brand-cyan" /> DOCUMENT SOURCE ARTIFACT
                         </span>
-                        <a href={invoice.pdf_link || '#'} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-brand-blue hover:underline flex items-center gap-1">
-                            SOURCE VIEW <ExternalLink size={10} />
-                        </a>
+                        {invoice.pdf_link && (
+                            <a href={invoice.pdf_link} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-brand-cyan hover:underline flex items-center gap-1">
+                                FULL VIEW <ExternalLink size={10} />
+                            </a>
+                        )}
                     </div>
-
-                    <div className="flex-1 overflow-hidden p-8 flex items-center justify-center">
-                        <div className={cn(
-                            "bg-white shadow-2xl rounded-sm border border-slate-200 w-full max-w-lg aspect-[1/1.41] relative flex flex-col items-center justify-center text-center group-hover:scale-[1.01] transition-transform duration-500",
-                            (invoice.pdf_link && invoice.pdf_link.startsWith('http') && !isProcessing) ? "p-0 overflow-hidden" : "p-12"
-                        )}>
-                            {isProcessing ? (
-                                <div className="space-y-6">
-                                    <div className="relative">
-                                        <div className="w-24 h-24 rounded-full border-4 border-slate-100 border-t-brand-blue animate-spin" />
-                                        <Zap size={32} className="absolute inset-0 m-auto text-brand-cyan animate-pulse" />
-                                    </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-slate-800">Gemini is Extracting Data</h3>
-                                        <p className="text-sm text-slate-500 mt-2">Running OCR and identifying line items with 99.8% confidence...</p>
-                                    </div>
-                                </div>
-                            ) : (invoice.pdf_link && invoice.pdf_link.startsWith('http')) ? (
-                                <div className="relative w-full h-full group/pdf">
-                                    <iframe
-                                        src={invoice.pdf_link}
-                                        className="w-full h-full border-none"
-                                        title="Invoice PDF"
-                                    />
-                                    <a
-                                        href={invoice.pdf_link.replace('/preview', '/view')}
-                                        target="_blank"
-                                        className="absolute bottom-4 right-4 bg-white/90 backdrop-blur px-4 py-2 rounded-lg text-xs font-bold text-slate-700 border border-slate-200 shadow-lg hover:bg-white transition-all uppercase tracking-widest opacity-0 group-hover/pdf:opacity-100 translate-y-2 group-hover/pdf:translate-y-0 duration-300"
-                                    >
-                                        Open Full View
-                                    </a>
-                                </div>
-                            ) : (
-                                <>
-                                    <FileText size={64} className="text-slate-200 mb-6" />
-                                    <div className="text-slate-400 font-medium">PDF Preview Unavailable</div>
-                                    <p className="text-[10px] text-slate-300 uppercase tracking-widest mt-2">{invoice.invoice_number || 'DOC_ID_PENDING'}</p>
-                                </>
-                            )}
-
-                            {/* Visual scan animation effect */}
-                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-cyan/30 to-transparent translate-y-[-100%] animate-scan group-hover:opacity-100 opacity-0" />
+                    {isProcessing ? (
+                        <div className="flex-1 flex flex-col items-center justify-center space-y-6">
+                            <div className="relative">
+                                <div className="w-24 h-24 rounded-full border-4 border-slate-700 border-t-brand-cyan animate-spin" />
+                                <Zap size={32} className="absolute inset-0 m-auto text-brand-cyan animate-pulse" />
+                            </div>
+                            <div>
+                                <h3 className="text-xl font-bold text-white">Gemini Extracting Data</h3>
+                                <p className="text-sm text-slate-400 mt-2">Running OCR and identifying line items...</p>
+                            </div>
                         </div>
-                    </div>
+                    ) : (invoice.pdf_link && invoice.pdf_link.startsWith('http')) ? (
+                        <div className="relative w-full h-full group/pdf">
+                            <iframe
+                                src={invoice.pdf_link}
+                                className="w-full h-full border-none rounded-xl"
+                                title="Invoice PDF"
+                            />
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-slate-600 border-2 border-dashed border-white/5 rounded-2xl bg-white/5">
+                            <FileText size={48} className="mb-4 opacity-20" />
+                            <div className="font-bold">Preview Restricted</div>
+                            <p className="text-xs mt-2 opacity-50 max-w-[200px] text-center">Chrome policy may block GDrive embeds. Click 'Full View' above.</p>
+                        </div>
+                    )}
+
+                    {/* Visual scan animation effect */}
+                    {isProcessing && <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-cyan/50 to-transparent translate-y-[-100%] animate-scan" />}
                 </div>
 
                 {/* Right Panel: AI Controller */}
@@ -297,31 +335,61 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                             <div className="flex flex-col h-full">
 
                                 {/* Status Banner (Exception or Success) */}
-                                {invoice.status !== 'READY_TO_POST' && invoice.status !== 'POSTED' ? (
-                                    <div className="p-8 bg-amber-50/50 border-b border-amber-100">
+                                {invoice.status !== 'POSTED' && (
+                                    <div className={cn(
+                                        "p-8 border-b",
+                                        invoice.status === 'READY_TO_POST' ? "bg-emerald-50/50 border-emerald-100" : "bg-amber-50/50 border-amber-100"
+                                    )}>
                                         <div className="flex items-start gap-4">
-                                            <div className="bg-amber-100 p-2.5 rounded-xl border border-amber-200 shadow-sm shadow-amber-900/5">
-                                                <ShieldAlert className="text-amber-600" size={20} />
+                                            <div className={cn(
+                                                "p-2.5 rounded-xl border shadow-sm",
+                                                invoice.status === 'READY_TO_POST' ? "bg-emerald-100 border-emerald-200 text-emerald-600" : "bg-amber-100 border-amber-200 text-amber-600"
+                                            )}>
+                                                {invoice.status === 'READY_TO_POST' ? <CheckCircle size={20} /> : <ShieldAlert size={20} />}
                                             </div>
                                             <div className="flex-1">
-                                                <h3 className="text-amber-900 font-bold text-sm tracking-tight">Match Discrepancy Flagged</h3>
-                                                <p className="text-amber-800 text-sm mt-1 leading-relaxed">
+                                                <h3 className={cn(
+                                                    "font-bold text-sm tracking-tight",
+                                                    invoice.status === 'READY_TO_POST' ? "text-emerald-900" : "text-amber-900"
+                                                )}>
+                                                    {invoice.status === 'READY_TO_POST' ? 'Perfect Match Verified' : 'Action Required: Discrepancy Found'}
+                                                </h3>
+                                                <p className={cn(
+                                                    "text-sm mt-1 leading-relaxed",
+                                                    invoice.status === 'READY_TO_POST' ? "text-emerald-800" : "text-amber-800"
+                                                )}>
                                                     {invoice.exception_reason || (isProcessing ? 'System is calculating variances...' : 'Awaiting manual verification of extracted lines.')}
                                                 </p>
 
-                                                {!isProcessing && (
+                                                {!isProcessing && invoice.audit_trail && (
+                                                    <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                                                        {invoice.audit_trail.split(';').map((step, idx) => {
+                                                            const parts = step.split(':');
+                                                            const label = parts[0]?.trim() || 'Step';
+                                                            const content = parts[1]?.trim() || '';
+                                                            if (!content) return null;
+                                                            const isPass = content.toLowerCase().includes('match') || content.toLowerCase().includes('found') || content.toLowerCase().includes('valid') || content.toLowerCase().includes('verified');
+
+                                                            return (
+                                                                <div key={idx} className="bg-white/50 border border-slate-100 rounded-xl p-3 flex items-center gap-3">
+                                                                    <div className={cn(
+                                                                        "p-1 rounded-full",
+                                                                        isPass ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                                                                    )}>
+                                                                        {isPass ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+                                                                    </div>
+                                                                    <div className="overflow-hidden">
+                                                                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label.replace('[', '').replace(']', '')}</div>
+                                                                        <div className="text-[11px] font-bold text-slate-700 truncate">{content}</div>
+                                                                    </div>
+                                                                </div>
+                                                            );
+                                                        })}
+                                                    </div>
+                                                )}
+
+                                                {!isProcessing && invoice.status !== 'READY_TO_POST' && (
                                                     <div className="mt-6 space-y-4">
-                                                        {invoice.audit_trail && (
-                                                            <div className="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex gap-3 items-start">
-                                                                <div className="bg-indigo-100 p-1.5 rounded-lg text-indigo-600 shrink-0">
-                                                                    <Wand2 size={14} />
-                                                                </div>
-                                                                <div>
-                                                                    <span className="text-[10px] font-black text-indigo-900/50 uppercase tracking-widest block mb-0.5">AI Insight & Policy Check</span>
-                                                                    <p className="text-sm font-medium text-indigo-900 italic">&quot;{invoice.audit_trail}&quot;</p>
-                                                                </div>
-                                                            </div>
-                                                        )}
                                                         <div className="bg-white/80 backdrop-blur border border-amber-200 rounded-xl p-4 shadow-sm">
                                                             <label className="text-[10px] font-black text-amber-900/50 uppercase tracking-[0.2em] mb-2 block">Resolution Instruction / Inquiry Memo</label>
                                                             <textarea
@@ -335,41 +403,19 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                                         <div className="flex items-center gap-3">
                                                             <button
                                                                 onClick={handleSendInquiry}
-                                                                className="text-[10px] bg-brand-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-black uppercase tracking-widest transition-all shadow-md active:scale-95"
+                                                                disabled={loading}
+                                                                className="text-[10px] bg-brand-navy hover:bg-slate-800 text-white px-4 py-2 rounded-lg font-black uppercase tracking-widest transition-all shadow-md active:scale-95 disabled:opacity-50"
                                                             >
                                                                 Send Vendor Inquiry
                                                             </button>
                                                             <button
                                                                 onClick={handleTrainAI}
-                                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-navy/5 hover:bg-brand-navy/10 text-brand-navy text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border border-brand-navy/5"
+                                                                disabled={loading}
+                                                                className="flex items-center gap-1.5 px-3 py-1.5 bg-brand-navy/5 hover:bg-brand-navy/10 text-brand-navy text-[10px] font-black uppercase tracking-widest rounded-lg transition-all border border-brand-navy/5 disabled:opacity-50"
                                                             >
                                                                 <Zap size={12} className="text-brand-yellow fill-brand-yellow" />
                                                                 Train AI on this Match
                                                             </button>
-                                                        </div>
-                                                    </div>
-                                                )}
-                                            </div>
-                                        </div>
-                                    </div>
-                                ) : (
-                                    <div className="p-8 bg-emerald-50/50 border-b border-emerald-100">
-                                        <div className="flex items-start gap-4">
-                                            <div className="bg-emerald-100 p-2.5 rounded-xl border border-emerald-200 shadow-sm text-emerald-600">
-                                                <CheckCircle size={20} />
-                                            </div>
-                                            <div className="flex-1">
-                                                <h3 className="text-emerald-900 font-bold text-sm">Perfect Match Verified</h3>
-                                                <p className="text-emerald-800 text-xs mt-0.5 mb-4">Gemini confirmed 100% alignment with PO {invoice.po_reference}.</p>
-
-                                                {invoice.audit_trail && (
-                                                    <div className="bg-white/60 border border-emerald-200 rounded-xl p-4 flex gap-3 items-start max-w-2xl">
-                                                        <div className="bg-emerald-100 p-1.5 rounded-lg text-emerald-600 shrink-0">
-                                                            <Wand2 size={14} />
-                                                        </div>
-                                                        <div>
-                                                            <span className="text-[10px] font-black text-emerald-900/50 uppercase tracking-widest block mb-0.5">AI Insight</span>
-                                                            <p className="text-sm font-medium text-emerald-900 italic">&quot;{invoice.audit_trail}&quot;</p>
                                                         </div>
                                                     </div>
                                                 )}
@@ -405,9 +451,19 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                             ))
                                         ) : (
                                             poLines.length > 0 ? (
-                                                poLines.map((line) => (
-                                                    <MatchingRow key={line.id} line={line} invoiceStatus={invoice.status} />
-                                                ))
+                                                poLines.map((line, idx) => {
+                                                    // Try to find a matching extracted line item (POC: by index or description)
+                                                    const extractedLine = (invoice as any).line_items?.[idx] || (invoice as any).line_items?.find((l: any) => l.description?.includes(line.material));
+
+                                                    return (
+                                                        <MatchingRow
+                                                            key={line.id}
+                                                            line={line}
+                                                            extractedLine={extractedLine}
+                                                            invoiceStatus={invoice.status}
+                                                        />
+                                                    );
+                                                })
                                             ) : (
                                                 <div className="py-12 flex flex-col items-center justify-center border-2 border-dashed border-slate-100 rounded-3xl bg-slate-50/30 text-slate-400">
                                                     <Search size={32} strokeWidth={1.5} className="mb-4 text-slate-200" />
@@ -483,15 +539,15 @@ function SummaryRow({ label, value }: { label: string, value: number }) {
     )
 }
 
-function MatchingRow({ line, invoiceStatus }: { line: POLine, invoiceStatus: string }) {
-    const hasPriceVariance = invoiceStatus === 'BLOCKED_PRICE';
-    const hasQtyVariance = invoiceStatus === 'BLOCKED_QTY';
+function MatchingRow({ line, extractedLine, invoiceStatus }: { line: POLine, extractedLine: any, invoiceStatus: string }) {
+    const hasPriceVariance = invoiceStatus === 'BLOCKED_PRICE' || (extractedLine && extractedLine.unit_price != line.unit_price);
+    const hasQtyVariance = invoiceStatus === 'BLOCKED_QTY' || (extractedLine && extractedLine.quantity != line.ordered_qty);
 
     return (
         <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:shadow-brand-blue/5 hover:border-brand-blue/20 transition-all duration-300 relative overflow-hidden group">
             <div className="flex justify-between items-start mb-4">
                 <div className="max-w-[70%]">
-                    <span className="text-[10px] font-black text-brand-blue/50 uppercase tracking-widest block mb-1">ERPLINE_{line.line_item}</span>
+                    <span className="text-[10px] font-black text-brand-blue/50 uppercase tracking-widest block mb-1">ERPLINE_{line.line_item} / INV_DESC: {extractedLine?.description || '---'}</span>
                     <h4 className="text-base font-bold text-slate-900 tracking-tight leading-tight group-hover:text-brand-blue transition-colors">{line.material}</h4>
                 </div>
                 <div className={cn(
@@ -506,17 +562,17 @@ function MatchingRow({ line, invoiceStatus }: { line: POLine, invoiceStatus: str
             <div className="grid grid-cols-2 gap-4">
                 <MetricBox
                     icon={<Package size={12} />}
-                    label="Quantity"
-                    value={line.ordered_qty}
+                    label="Quantity Mapping"
+                    value={`SAP: ${line.ordered_qty}`}
                     alert={hasQtyVariance}
-                    alertText="ERP: 1, Extract: 2"
+                    alertText={extractedLine ? `EXTRACTED: ${extractedLine.quantity}` : "NO DATA"}
                 />
                 <MetricBox
                     icon={<DollarSign size={12} />}
-                    label="Unit Value"
-                    value={`$${line.unit_price}`}
+                    label="Price Mapping"
+                    value={`SAP: $${line.unit_price}`}
                     alert={hasPriceVariance}
-                    alertText="Price Deviation"
+                    alertText={extractedLine ? `EXTRACTED: $${extractedLine.unit_price}` : "NO DATA"}
                 />
             </div>
 
@@ -548,8 +604,11 @@ function StatusBadge({ status }: { status: string }) {
     const styles: Record<string, string> = {
         PROCESSING: 'bg-brand-cyan/20 text-brand-cyan border-brand-cyan/10',
         READY_TO_POST: 'bg-emerald-500/20 text-emerald-400 border-emerald-500/10',
-        BLOCKED_PRICE: 'bg-amber-500/20 text-amber-400 border-amber-500/10',
+        BLOCKED_PRICE: 'bg-amber-500/20 text-amber-500 border-amber-500/10',
         BLOCKED_QTY: 'bg-orange-500/20 text-orange-400 border-orange-500/10',
+        BLOCKED_DATA: 'bg-rose-500/20 text-rose-500 border-rose-500/10',
+        BLOCKED_DUPLICATE: 'bg-slate-500/20 text-slate-300 border-slate-500/10',
+        PARKED: 'bg-indigo-500/20 text-indigo-400 border-indigo-500/10',
         POSTED: 'bg-slate-500/20 text-slate-400 border-slate-500/10',
         REJECTED: 'bg-red-500/20 text-red-400 border-red-500/10',
         AWAITING_INFO: 'bg-purple-500/20 text-purple-400 border-purple-500/10'

@@ -4,29 +4,30 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 // Initialize Gemini API
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
 
-async function generateAIResponse(message: string, invoiceId: string) {
-    // If no API key is set, fallback to mock (safety net)
+async function generateAIResponse(message: string, invoiceId: string, context: any) {
     if (!process.env.GEMINI_API_KEY) {
-        console.warn('GEMINI_API_KEY not found, using fallback mock.');
-        return {
-            text: `[Fallback Mode] I've analyzed Invoice #${invoiceId}. Please add your Gemini API Key to .env.local to enable real AI analysis.`
-        };
+        return { text: "[Fallback] Please add GEMINI_API_KEY to .env.local" };
     }
 
     try {
-        const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+        const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
 
         const prompt = `
-      You are an expert Accounts Payable Copilot.
-      User is asking about Invoice #${invoiceId}.
+      You are an expert Accounts Payable Copilot for the "Vendor Invoice Matching Platform".
+      Current Invoice Context:
+      - ID: ${invoiceId}
+      - Vendor: ${context.vendorName}
+      - Status: ${context.status}
+      - Exception Reason: ${context.exceptionReason || 'None'}
       
-      Context: The user is reviewing this invoice for potential discrepancies.
+      USER QUESTION: "${message}"
       
-      User Question: "${message}"
-      
-      Provide a helpful, professional response. If the user asks to draft an email, draft it.
-      If they ask for analysis, assume there is a price variance where Invoice Price > PO Price (Standard Issue).
-      Keep it concise and actionable.
+      INSTRUCTIONS:
+      1. Provide a professional, analytical response based on the context.
+      2. If the status is BLOCKED, explain logically why (e.g., price mismatch, missing data).
+      3. If the user asks for an email, draft a professional inquiry to the vendor.
+      4. Use markdown for tables/bolding to make it readable.
+      5. Keep it concise but insightful.
     `;
 
         const result = await model.generateContent(prompt);
@@ -35,32 +36,22 @@ async function generateAIResponse(message: string, invoiceId: string) {
 
     } catch (error) {
         console.error('Gemini API Error:', error);
-        return {
-            text: "I'm having trouble connecting to my AI brain right now. Please try again later."
-        };
+        return { text: "I'm having trouble connecting to my AI brain. Check your API key." };
     }
 }
 
 export async function POST(request: Request) {
     try {
         const body = await request.json();
-        const { message, invoiceId } = body;
+        const { message, invoiceId, context } = body;
 
         if (!message || !invoiceId) {
-            return NextResponse.json(
-                { error: 'Missing message or invoiceId' },
-                { status: 400 }
-            );
+            return NextResponse.json({ error: 'Missing params' }, { status: 400 });
         }
 
-        const aiResponse = await generateAIResponse(message, invoiceId);
-
+        const aiResponse = await generateAIResponse(message, invoiceId, context || {});
         return NextResponse.json(aiResponse);
     } catch (error) {
-        console.error('Copilot API Error:', error);
-        return NextResponse.json(
-            { error: 'Internal Server Error' },
-            { status: 500 }
-        );
+        return NextResponse.json({ error: 'Server Error' }, { status: 500 });
     }
 }
