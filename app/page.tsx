@@ -54,12 +54,14 @@ export default async function Dashboard() {
     <div className="flex-1 flex flex-col bg-slate-50 min-h-screen">
 
       {/* Premium Top Bar */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-slate-200 px-8 py-5 sticky top-0 z-20 flex items-center justify-between">
+      <header className="bg-white/70 backdrop-blur-xl border-b border-white px-8 py-5 sticky top-0 z-50 flex items-center justify-between shadow-sm">
         <div className="flex items-center gap-6">
-          <Logo showText={false} width={260} height={90} className="-ml-4" />
-          <div>
-            <h1 className="text-lg font-bold text-slate-900 leading-tight tracking-tight">Intelligence Dashboard</h1>
-            <p className="text-[10px] text-slate-500 font-black uppercase tracking-[0.2em] opacity-70">AP + AI Operating System</p>
+          <Logo showText={false} width={260} height={90} className="-ml-4 drop-shadow-2xl" />
+          <div className="relative">
+            <h1 className="text-2xl font-black text-brand-navy leading-tight tracking-[calc(-0.025em)] bg-clip-text text-transparent bg-gradient-to-r from-brand-navy to-brand-blue">
+              Intelligence Command Center
+            </h1>
+            <p className="text-[10px] text-brand-blue font-black uppercase tracking-[0.3em] opacity-80 mt-0.5">Automated AP Operating System</p>
           </div>
         </div>
         <div className="flex items-center gap-3">
