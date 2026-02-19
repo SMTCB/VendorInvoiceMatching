@@ -32,8 +32,37 @@ Use this file to track the outcome of the structured testing phase.
 - **Screenshots:** 
 
 ---
-### [STRESS-ALL] Stress Test Automation
+
+### [STRESS-20-SCENARIOS] Scaled Stress Test (20 Invoices)
 - **Date:** 2026-02-19
-- **Script:** `scripts/execute_stress_test.ts`
-- **Outcome:** All 5 mock scenarios processed successfully in parallel batch.
-- **Notes:** Database was wiped and re-seeded prior to execution.
+- **Script:** `scripts/monitor_stress_test_20.ts`
+- **Total Scenarios:** 20
+- **Passed:** 9
+- **Failed:** 11
+- **Critical Findings:**
+    - "Error parsing LLM" leads to `READY_TO_POST` status in several failure cases (S3, S7, S11, S14, S16, S17). This is a security risk.
+    - S10 (Missing PO) stuck in `PROCESSING`.
+    - S12 (Tolerance) failed to find PO lines despite valid PO reference.
+
+| ID | Invoice | Expected | Actual | Result | Notes |
+|---|---|---|---|---|---|
+| S1_PERFECT_MATCH | INV-S1 | READY_TO_POST | READY_TO_POST | ✅ |  |
+| S2_MULTI_LINE | INV-S2 | READY_TO_POST | BLOCKED_QTY | ❌ | Reason: Invoice quantity exceeds PO quantity for item Widget A and Widget B. |
+| S3_PRICE_BLOCK | INV-S3 | BLOCKED_PRICE | READY_TO_POST | ❌ | Reason: Error parsing LLM |
+| S4_QTY_BLOCK | INV-S4 | BLOCKED_QTY | BLOCKED_QTY | ✅ |  |
+| S5_CURRENCY_FAIL | INV-S5 | BLOCKED_PRICE | BLOCKED_PRICE | ✅ |  |
+| S6_PARTIAL_DELIV | INV-S6 | READY_TO_POST | READY_TO_POST | ✅ |  |
+| S7_FINAL_DELIV | INV-S7 | AWAITING_INFO | READY_TO_POST | ❌ | Reason: Error parsing LLM |
+| S8_FUZZY_VENDOR | INV-S8 | READY_TO_POST | READY_TO_POST | ✅ |  |
+| S9_AI_LEARNING | INV-S9 | READY_TO_POST | READY_TO_POST | ✅ |  |
+| S10_NO_PO | INV-S10 | BLOCKED_DATA | PROCESSING | ❌ | Reason: None |
+| S11_INVALID_PO | INV-S11 | BLOCKED_DATA | READY_TO_POST | ❌ | Reason: Error parsing LLM |
+| S12_TOLERANCE_PASS | INV-S12 | READY_TO_POST | BLOCKED_QTY | ❌ | Reason: PO lines are empty, cannot determine PO Quantity, blocking the invoice |
+| S13_SERVICE_PO | INV-S13 | READY_TO_POST | READY_TO_POST | ✅ |  |
+| S14_DUPLICATE | INV-S1_PERFECT | BLOCKED_DUPLICATE | READY_TO_POST | ❌ | Reason: Error parsing LLM |
+| S15_CREDIT_MEMO | INV-S15 | READY_TO_POST | READY_TO_POST | ✅ |  |
+| S16_FREIGHT | INV-S16 | BLOCKED_PRICE | READY_TO_POST | ❌ | Reason: Error parsing LLM |
+| S17_TAX_MISMATCH | INV-S17 | BLOCKED_PRICE | READY_TO_POST | ❌ | Reason: Error parsing LLM |
+| S18_HIGH_VALUE | INV-S18 | READY_TO_POST | BLOCKED_PRICE | ❌ | Reason: Missing PO Lines. Unable to perform a three way match. |
+| S19_OLD_DATE | INV-S19 | READY_TO_POST | READY_TO_POST | ✅ |  |
+| S20_COMPLEX_AUDIT | INV-S20 | BLOCKED_PRICE | AWAITING_INFO | ❌ | Reason: Short delivery marked as Final Bill - Review required |

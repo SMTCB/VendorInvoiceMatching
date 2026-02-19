@@ -1,0 +1,541 @@
+[
+    {
+        "id": "S1_PERFECT_MATCH",
+        "filename": "S1_PERFECT.pdf",
+        "desc": "Standard 3-way match",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S1",
+            "total": 100.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002001",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Standard Widget",
+            "qty": 10,
+            "unit_price": 10.00
+        },
+        "gr_data": {
+            "received_qty": 10
+        }
+    },
+    {
+        "id": "S2_MULTI_LINE",
+        "filename": "S2_MULTI.pdf",
+        "desc": "Multi-line Perfect Match",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S2",
+            "total": 250.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002002",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "extra_po_lines": [
+            {
+                "item": 20,
+                "qty": 5,
+                "price": 30.00
+            }
+        ],
+        "line_item": {
+            "desc": "Widget A",
+            "qty": 10,
+            "unit_price": 10.00
+        },
+        "extra_inv_lines": [
+            {
+                "desc": "Widget B",
+                "qty": 5,
+                "unit_price": 30.00
+            }
+        ],
+        "gr_data": {
+            "received_qty": 10
+        },
+        "extra_gr_data": [
+            {
+                "item": 20,
+                "received_qty": 5
+            }
+        ]
+    },
+    {
+        "id": "S3_PRICE_BLOCK",
+        "filename": "S3_PRICE_VAR.pdf",
+        "desc": "Price Variance > Threshold (Blocked)",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S3",
+            "total": 120.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002003",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Expensive Widget",
+            "qty": 10,
+            "unit_price": 12.00
+        },
+        "gr_data": {
+            "received_qty": 10
+        }
+    },
+    {
+        "id": "S4_QTY_BLOCK",
+        "filename": "S4_QTY_VAR.pdf",
+        "desc": "Qty Variance > PO (Blocked)",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S4",
+            "total": 110.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002004",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Overdelivered Widget",
+            "qty": 11,
+            "unit_price": 10.00
+        },
+        "gr_data": {
+            "received_qty": 10
+        }
+    },
+    {
+        "id": "S5_CURRENCY_FAIL",
+        "filename": "S5_EUR_USD.pdf",
+        "desc": "Currency Mismatch (EUR Inv vs USD PO)",
+        "vendor": "TechGap Solutions (EUR)",
+        "invoice_data": {
+            "number": "INV-S5",
+            "total": 100.00,
+            "currency": "EUR"
+        },
+        "po_data": {
+            "number": "4500002005",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Euro Widget",
+            "qty": 10,
+            "unit_price": 10.00
+        },
+        "gr_data": {
+            "received_qty": 10
+        }
+    },
+    {
+        "id": "S6_PARTIAL_DELIV",
+        "filename": "S6_PARTIAL.pdf",
+        "desc": "Valid Partial Delivery",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S6",
+            "total": 50.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002006",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Partial Widget",
+            "qty": 5,
+            "unit_price": 10.00
+        },
+        "gr_data": {
+            "received_qty": 5
+        }
+    },
+    {
+        "id": "S7_FINAL_DELIV",
+        "filename": "S7_FINAL.pdf",
+        "desc": "Short Delivery marked FINAL (Review)",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S7",
+            "total": 50.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002007",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Final Short Widget",
+            "qty": 5,
+            "unit_price": 10.00
+        },
+        "text_content": "This is the FINAL invoice for PO 4500002007.",
+        "gr_data": {
+            "received_qty": 5
+        }
+    },
+    {
+        "id": "S8_FUZZY_VENDOR",
+        "filename": "S8_FUZZY.pdf",
+        "desc": "Vendor Name Mismatch (Fuzzy Match)",
+        "vendor": "TechGap LLC",
+        "invoice_data": {
+            "number": "INV-S8",
+            "total": 100.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002008",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Fuzzy Widget",
+            "qty": 10,
+            "unit_price": 10.00
+        },
+        "gr_data": {
+            "received_qty": 10
+        }
+    },
+    {
+        "id": "S9_AI_LEARNING",
+        "filename": "S9_AI_FIX.pdf",
+        "desc": "Price Variance Approved by AI History",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S9",
+            "total": 105.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002009",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "AI Learned Price",
+            "qty": 10,
+            "unit_price": 10.50
+        },
+        "gr_data": {
+            "received_qty": 10
+        },
+        "ai_seed": {
+            "field": "unit_price",
+            "original": 10.00,
+            "new": 10.50,
+            "reason": "Pre-approved price hike 2026"
+        }
+    },
+    {
+        "id": "S10_NO_PO",
+        "filename": "S10_NO_PO.pdf",
+        "desc": "Missing PO Reference",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S10",
+            "total": 100.00,
+            "currency": "USD"
+        },
+        "po_data": null,
+        "line_item": {
+            "desc": "Mystery Widget",
+            "qty": 10,
+            "unit_price": 10.00
+        },
+        "gr_data": null
+    },
+    {
+        "id": "S11_INVALID_PO",
+        "filename": "S11_BAD_PO.pdf",
+        "desc": "PO Number Not Found",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S11",
+            "total": 100.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "9999999999",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Ghost Widget",
+            "qty": 10,
+            "unit_price": 10.00
+        },
+        "gr_data": null
+    },
+    {
+        "id": "S12_TOLERANCE_PASS",
+        "filename": "S12_TOLERANCE.pdf",
+        "desc": "Small Price Variance (Inside Tolerance)",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S12",
+            "total": 100.10,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002012",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Tolerance Widget",
+            "qty": 10,
+            "unit_price": 10.01
+        },
+        "gr_data": {
+            "received_qty": 10
+        }
+    },
+    {
+        "id": "S13_SERVICE_PO",
+        "filename": "S13_SERVICE.pdf",
+        "desc": "Service PO (Valid)",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S13",
+            "total": 500.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002013",
+            "item": 10,
+            "qty": 1,
+            "price": 500.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Consulting Services",
+            "qty": 1,
+            "unit_price": 500.00
+        },
+        "gr_data": {
+            "received_qty": 1
+        }
+    },
+    {
+        "id": "S14_DUPLICATE",
+        "filename": "S14_DUPE.pdf",
+        "desc": "Duplicate Invoice Check",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S1_PERFECT",
+            "total": 100.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002001",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Duplicate attempt",
+            "qty": 10,
+            "unit_price": 10.00
+        },
+        "gr_data": {
+            "received_qty": 10
+        }
+    },
+    {
+        "id": "S15_CREDIT_MEMO",
+        "filename": "S15_CREDIT.pdf",
+        "desc": "Credit Memo (Negative)",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S15",
+            "total": -10.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002015",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Return of Goods",
+            "qty": 1,
+            "unit_price": 10.00
+        },
+        "text_content": "CREDIT MEMO for return of damaged goods.",
+        "gr_data": null
+    },
+    {
+        "id": "S16_FREIGHT",
+        "filename": "S16_FREIGHT.pdf",
+        "desc": "Unplanned Delivery Costs (Freight)",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S16",
+            "total": 110.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002016",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Widget + Freight",
+            "qty": 10,
+            "unit_price": 10.00
+        },
+        "text_content": "Freight Charges: $10.00",
+        "gr_data": {
+            "received_qty": 10
+        }
+    },
+    {
+        "id": "S17_TAX_MISMATCH",
+        "filename": "S17_TAX.pdf",
+        "desc": "Tax Mismatch / Calculation Error",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S17",
+            "total": 108.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002017",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Taxed Widget",
+            "qty": 10,
+            "unit_price": 10.00
+        },
+        "text_content": "Subtotal: 100.00 Tax: 8% Total: 108.00",
+        "gr_data": {
+            "received_qty": 10
+        }
+    },
+    {
+        "id": "S18_HIGH_VALUE",
+        "filename": "S18_HIGHVAL.pdf",
+        "desc": "High Value Invoice (>10k)",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S18",
+            "total": 20000.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002018",
+            "item": 10,
+            "qty": 1,
+            "price": 20000.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Enterprise Server Rack",
+            "qty": 1,
+            "unit_price": 20000.00
+        },
+        "gr_data": {
+            "received_qty": 1
+        }
+    },
+    {
+        "id": "S19_OLD_DATE",
+        "filename": "S19_OLD.pdf",
+        "desc": "Invoice Date too old (>1yr)",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S19",
+            "total": 100.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002019",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Old Widget",
+            "qty": 10,
+            "unit_price": 10.00
+        },
+        "text_content": "Date: 2024-01-01",
+        "gr_data": {
+            "received_qty": 10
+        }
+    },
+    {
+        "id": "S20_COMPLEX_AUDIT",
+        "filename": "S20_AUDIT.pdf",
+        "desc": "Complex Scenario (Partial + Price Var)",
+        "vendor": "TechGap Solutions",
+        "invoice_data": {
+            "number": "INV-S20",
+            "total": 60.00,
+            "currency": "USD"
+        },
+        "po_data": {
+            "number": "4500002020",
+            "item": 10,
+            "qty": 10,
+            "price": 10.00,
+            "currency": "USD"
+        },
+        "line_item": {
+            "desc": "Complex Widget",
+            "qty": 5,
+            "unit_price": 12.00
+        },
+        "gr_data": {
+            "received_qty": 5
+        }
+    }
+]
