@@ -191,20 +191,70 @@
     },
     {
       "parameters": {
-        "httpMethod": "POST",
-        "path": "test-matching",
-        "responseMode": "lastNode",
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "type": "string"
+          },
+          "conditions": [
+            {
+              "id": "e2e2e2e2-e2e2-4e2e-8e2e-e2e2e2e2e2e2",
+              "leftValue": "={{ $json.status }}",
+              "rightValue": "READY_TO_POST",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter_equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
         "options": {}
       },
-      "id": "5a6b092d-9b2e-424d-8ea5-0466e28d7cdf",
-      "name": "Test Webhook",
-      "type": "n8n-nodes-base.webhook",
-      "typeVersion": 1,
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
       "position": [
-        45728,
-        27024
+        47600,
+        26624
       ],
-      "webhookId": "a688d92d-06d8-43f2-9130-92b478522890"
+      "id": "filter-ready-to-post",
+      "name": "Filter Successful Matches"
+    },
+    {
+      "parameters": {
+        "operation": "move",
+        "fileId": {
+          "__rl": true,
+          "value": "={{ $node[\"Normalize Data\"].json.google_file_id }}",
+          "mode": "id"
+        },
+        "driveId": {
+          "__rl": true,
+          "value": "My Drive",
+          "mode": "list"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "10_Y_bu9Cz99MataERG6ylQEi6Zec7Ht-",
+          "mode": "id"
+        }
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [
+        47824,
+        26560
+      ],
+      "id": "move-to-processed",
+      "name": "Move to Processed folder",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "lSw2kca5NYlWFFag",
+          "name": "Google Drive account"
+        }
+      }
     }
   ],
   "pinData": {},
@@ -280,6 +330,28 @@
         [
           {
             "node": "Execute a SQL query",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Execute a SQL query": {
+      "main": [
+        [
+          {
+            "node": "Filter Successful Matches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Successful Matches": {
+      "main": [
+        [
+          {
+            "node": "Move to Processed folder",
             "type": "main",
             "index": 0
           }

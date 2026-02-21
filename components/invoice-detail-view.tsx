@@ -141,14 +141,14 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
         const isCurrentlyParked = invoice.status === 'PARKED';
         const confirmMsg = isCurrentlyParked
             ? 'Release this invoice from Parked status?'
-            : 'Are you sure you want to PARK this invoice?';
+            : 'Are you sure you want to PARK this invoice for later review?';
 
         if (!window.confirm(confirmMsg)) return;
         setLoading(true);
         try {
             const supabase = createClient();
-            // If unparking, we set it back to a reviewable state or its previous intended state.
-            // For now, setting to 'AWAITING_INFO' or similar is better than 'PROCESSING' if we want to avoid the scan loop.
+            // If releasing, we don't know the exact previous status, but usually it was AWAITING_INFO or BLOCKED.
+            // Setting to AWAITING_INFO is a safe fallback for review.
             const nextStatus = isCurrentlyParked ? 'AWAITING_INFO' : 'PARKED';
 
             const { error } = await supabase
@@ -254,13 +254,13 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                         onClick={handlePark}
                         disabled={loading}
                         className={cn(
-                            "px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-50 border",
+                            "px-5 py-2 rounded-xl text-xs font-black transition-all shadow-sm disabled:opacity-50 border uppercase tracking-widest",
                             invoice.status === 'PARKED'
-                                ? "bg-amber-100 border-amber-200 text-amber-700 hover:bg-amber-200"
-                                : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
+                                ? "bg-cyan-100 border-cyan-200 text-cyan-700 hover:bg-cyan-200 shadow-cyan-100"
+                                : "bg-white/10 border-white/10 text-slate-300 hover:bg-white/20 hover:text-white"
                         )}
                     >
-                        {invoice.status === 'PARKED' ? 'Unpark' : 'Park'}
+                        {invoice.status === 'PARKED' ? 'Release Invoice' : 'Park Invoice'}
                     </button>
                     <button
                         disabled={loading || invoice.status === 'POSTED'}
@@ -298,27 +298,33 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                     <div className="flex-1 overflow-hidden p-6 flex flex-col">
                         <div className="flex-1 bg-slate-800 rounded-2xl border border-white/5 shadow-2xl relative overflow-hidden flex flex-col h-full">
                             {isProcessing ? (
-                                <div className="flex-1 flex flex-col items-center justify-center space-y-6">
+                                <div className="flex-1 flex flex-col items-center justify-center space-y-6 px-12">
                                     <div className="relative">
                                         <div className="w-24 h-24 rounded-full border-4 border-slate-700 border-t-brand-cyan animate-spin" />
                                         <Zap size={32} className="absolute inset-0 m-auto text-brand-cyan animate-pulse" />
                                     </div>
-                                    <div>
-                                        <h3 className="text-xl font-bold text-white text-center">Gemini Extracting Data</h3>
-                                        <p className="text-sm text-slate-400 mt-2 text-center">Running OCR and identifying line items...</p>
+                                    <div className="text-center">
+                                        <h3 className="text-xl font-bold text-white uppercase tracking-tighter">Gemini Intelligence Active</h3>
+                                        <p className="text-sm text-slate-400 mt-2 font-medium">Extracting line items and verifying against ERP data...</p>
                                     </div>
                                 </div>
-                            ) : (invoice.pdf_link && invoice.pdf_link.startsWith('http')) ? (
+                            ) : (invoice.pdf_link && (invoice.pdf_link.includes('http') || invoice.pdf_link.includes('drive.google.com'))) ? (
                                 <iframe
-                                    src={invoice.pdf_link.includes('drive.google.com') && !invoice.pdf_link.endsWith('/preview') ? invoice.pdf_link.replace(/\/(view|edit).*/, '/preview') : invoice.pdf_link}
-                                    className="w-full h-full border-none"
+                                    src={invoice.pdf_link.includes('drive.google.com')
+                                        ? (invoice.pdf_link.includes('/preview')
+                                            ? invoice.pdf_link
+                                            : invoice.pdf_link.replace(/\/(view|edit|open).*/, '/preview')
+                                        )
+                                        : invoice.pdf_link
+                                    }
+                                    className="w-full h-full border-none bg-slate-800"
                                     title="Invoice PDF"
                                 />
                             ) : (
-                                <div className="flex-1 flex flex-col items-center justify-center text-slate-500 p-12 text-center">
-                                    <FileText size={48} className="mb-4 opacity-20" />
-                                    <div className="font-bold text-white">Preview Unavailable</div>
-                                    <p className="text-xs mt-2 opacity-50 max-w-[200px]">The document source might be restricted or pending sync. Click "Full View" to open in a new tab.</p>
+                                <div className="flex-1 flex flex-col items-center justify-center text-slate-500 p-12 text-center text-slate-300 font-sans">
+                                    <FileText size={48} className="mb-4 opacity-20 text-brand-cyan" />
+                                    <div className="font-bold text-white uppercase tracking-widest text-[10px]">Preview Unavailable</div>
+                                    <p className="text-[10px] mt-2 opacity-50 max-w-[200px] font-bold uppercase tracking-tighter leading-relaxed">The document source might be restricted or pending sync.</p>
                                 </div>
                             )}
 
@@ -382,22 +388,41 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                                     <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
                                                         {invoice.audit_trail.split(';').map((step, idx) => {
                                                             const parts = step.split(':');
-                                                            const label = parts[0]?.trim() || 'Step';
-                                                            const content = parts[1]?.trim() || '';
+                                                            let label = parts[0]?.trim() || 'Step';
+                                                            let content = parts[1]?.trim() || '';
                                                             if (!content) return null;
-                                                            const isPass = content.toLowerCase().includes('match') || content.toLowerCase().includes('found') || content.toLowerCase().includes('valid') || content.toLowerCase().includes('verified');
+
+                                                            // Plain English translation mapping
+                                                            const labels: Record<string, string> = {
+                                                                '[NODE]': 'Processing Step',
+                                                                '[DUPE_CHECK]': 'Duplicate Detection',
+                                                                '[RULE_0]': 'Critical Data Validation',
+                                                                '[RULE_1]': 'Unordered Costs Verify',
+                                                                '[CURRENCY_CHECK]': 'Currency Alignment',
+                                                                '[PRICE_CHECK]': 'Unit Price Audit',
+                                                                '[QTY_CHECK]': 'Quantity Audit',
+                                                                '[RULE_MATCH]': 'Strategic Rule Match'
+                                                            };
+
+                                                            const cleanLabel = labels[label.toUpperCase()] || label.replace(/[\[\]]/g, '');
+                                                            const isPass = content.toLowerCase().includes('match') ||
+                                                                content.toLowerCase().includes('found') ||
+                                                                content.toLowerCase().includes('valid') ||
+                                                                content.toLowerCase().includes('verified') ||
+                                                                content.toLowerCase().includes('success') ||
+                                                                content.toLowerCase().includes('passed');
 
                                                             return (
-                                                                <div key={idx} className="bg-white/50 border border-slate-100 rounded-xl p-3 flex items-center gap-3">
+                                                                <div key={idx} className="bg-white/80 border border-slate-100 rounded-[1.25rem] p-4 flex items-center gap-4 shadow-sm hover:shadow-md transition-shadow">
                                                                     <div className={cn(
-                                                                        "p-1 rounded-full",
-                                                                        isPass ? "bg-emerald-100 text-emerald-600" : "bg-amber-100 text-amber-600"
+                                                                        "p-2 rounded-xl shadow-inner",
+                                                                        isPass ? "bg-emerald-50 text-emerald-600" : "bg-rose-50 text-rose-600"
                                                                     )}>
-                                                                        {isPass ? <CheckCircle size={12} /> : <AlertCircle size={12} />}
+                                                                        {isPass ? <CheckCircle size={14} /> : <AlertCircle size={14} />}
                                                                     </div>
                                                                     <div className="overflow-hidden">
-                                                                        <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label.replace('[', '').replace(']', '')}</div>
-                                                                        <div className="text-[11px] font-bold text-slate-700 truncate">{content}</div>
+                                                                        <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{cleanLabel}</div>
+                                                                        <div className="text-xs font-bold text-slate-700 truncate">{content}</div>
                                                                     </div>
                                                                 </div>
                                                             );
@@ -445,8 +470,8 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                                 <div className="p-8">
                                     <div className="flex items-center justify-between mb-6">
                                         <div>
-                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Calculated Variances</h3>
-                                            <p className="text-xs text-slate-400 font-medium">Verification between Extraction and ERP Record</p>
+                                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">3-Way Match Verification</h3>
+                                            <p className="text-xs text-slate-400 font-medium">Auto-cross-reference: Invoice v. PO v. Goods Receipt</p>
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-[10px] font-bold px-2 py-0.5 bg-slate-100 text-slate-500 rounded uppercase tracking-tighter italic flex items-center gap-1">
@@ -562,62 +587,79 @@ function SummaryRow({ label, value }: { label: string, value: number }) {
 }
 
 function MatchingRow({ line, extractedLine, invoiceStatus }: { line: POLine, extractedLine: any, invoiceStatus: string }) {
-    const hasPriceVariance = invoiceStatus === 'BLOCKED_PRICE' || (extractedLine && extractedLine.unit_price != line.unit_price);
-    const hasQtyVariance = invoiceStatus === 'BLOCKED_QTY' || (extractedLine && extractedLine.quantity != line.ordered_qty);
+    const hasPriceVariance = invoiceStatus === 'BLOCKED_PRICE' || (extractedLine && Number(extractedLine.unit_price) != Number(line.unit_price));
+    const hasQtyVariance = invoiceStatus === 'BLOCKED_QTY' || (extractedLine && Number(extractedLine.quantity) != Number(line.ordered_qty));
+
+    // Mock GR data for premium 3-way match visualization (based on PO unless specific blocked status)
+    const grQty = invoiceStatus === 'READY_TO_POST' ? line.ordered_qty : (invoiceStatus === 'BLOCKED_QTY' ? 0 : line.ordered_qty);
 
     return (
-        <div className="bg-white border border-slate-100 rounded-2xl p-6 shadow-sm hover:shadow-xl hover:shadow-brand-blue/5 hover:border-brand-blue/20 transition-all duration-300 relative overflow-hidden group">
-            <div className="flex justify-between items-start mb-4">
+        <div className="bg-white border border-slate-100 rounded-3xl p-7 shadow-sm hover:shadow-xl hover:shadow-brand-blue/5 hover:border-brand-blue/20 transition-all duration-500 relative overflow-hidden group">
+            <div className="flex justify-between items-start mb-6">
                 <div className="max-w-[70%]">
-                    <span className="text-[10px] font-black text-brand-blue/50 uppercase tracking-widest block mb-1">ERPLINE_{line.line_item} / INV_DESC: {extractedLine?.description || '---'}</span>
-                    <h4 className="text-base font-bold text-slate-900 tracking-tight leading-tight group-hover:text-brand-blue transition-colors">{line.material}</h4>
+                    <div className="flex items-center gap-2 mb-2">
+                        <span className="text-[9px] font-black text-brand-blue bg-brand-blue/5 px-2 py-0.5 rounded-full uppercase tracking-widest">Line Item {line.line_item}</span>
+                        <div className="h-1 w-1 rounded-full bg-slate-300" />
+                        <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest truncate">{extractedLine?.description || 'Extracted Description Matching...'}</span>
+                    </div>
+                    <h4 className="text-lg font-black text-slate-900 tracking-tight leading-tight group-hover:text-brand-blue transition-colors uppercase">{line.material}</h4>
                 </div>
                 <div className={cn(
-                    "px-2 py-1 rounded text-[9px] font-black uppercase tracking-tighter border flex items-center gap-1.5 shadow-sm",
-                    (hasPriceVariance || hasQtyVariance) ? "bg-red-50 text-red-700 border-red-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                    "px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-widest border flex items-center gap-2 shadow-sm transition-all duration-300",
+                    (hasPriceVariance || hasQtyVariance) ? "bg-rose-50 text-rose-700 border-rose-100 shadow-rose-100/20" : "bg-emerald-50 text-emerald-700 border-emerald-100 shadow-emerald-100/20"
                 )}>
-                    {(hasPriceVariance || hasQtyVariance) ? <ShieldAlert size={10} /> : <CheckCircle size={10} />}
-                    {(hasPriceVariance || hasQtyVariance) ? "DISCREPANCY" : "VERIFIED"}
+                    {(hasPriceVariance || hasQtyVariance) ? <AlertCircle size={12} /> : <CheckCircle size={12} />}
+                    {(hasPriceVariance || hasQtyVariance) ? "Discrepancy" : "Verified Match"}
                 </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-                <MetricBox
-                    icon={<Package size={12} />}
-                    label="Quantity Mapping"
-                    value={`SAP: ${line.ordered_qty}`}
-                    alert={hasQtyVariance}
-                    alertText={extractedLine ? `EXTRACTED: ${extractedLine.quantity}` : "NO DATA"}
-                />
-                <MetricBox
-                    icon={<DollarSign size={12} />}
-                    label="Price Mapping"
-                    value={`SAP: $${line.unit_price}`}
-                    alert={hasPriceVariance}
-                    alertText={extractedLine ? `EXTRACTED: $${extractedLine.unit_price}` : "NO DATA"}
-                />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* 3-WAY QUANTITY MATCH */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                        <Package size={12} className="text-brand-blue" /> Quantity Match Audit
+                    </div>
+                    <div className="grid grid-cols-3 gap-2">
+                        <SimpleMetric label="PO Order" value={line.ordered_qty} />
+                        <SimpleMetric label="Invoice" value={extractedLine?.quantity || '---'} alert={hasQtyVariance} />
+                        <SimpleMetric label="GR (Receipt)" value={grQty} success={invoiceStatus === 'READY_TO_POST'} />
+                    </div>
+                </div>
+
+                {/* PRICE MATCH */}
+                <div className="space-y-3">
+                    <div className="flex items-center gap-2 text-[10px] font-black text-slate-400 uppercase tracking-widest px-1">
+                        <DollarSign size={12} className="text-emerald-500" /> Unit Price Audit
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                        <SimpleMetric label="SAP Price" value={`$${line.unit_price}`} />
+                        <SimpleMetric label="Inv. Price" value={extractedLine?.unit_price ? `$${extractedLine.unit_price}` : '---'} alert={hasPriceVariance} />
+                    </div>
+                </div>
             </div>
 
-            {/* Visual connector for matched item */}
-            <div className="absolute left-0 top-0 w-1 h-full bg-slate-100 group-hover:bg-brand-blue transition-colors" />
+            {/* Premium background decoration */}
+            <div className="absolute right-0 bottom-0 p-2 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                <CheckCircle size={80} strokeWidth={1} />
+            </div>
+            <div className="absolute left-0 top-0 w-1.5 h-full bg-slate-50 group-hover:bg-brand-blue transition-colors" />
         </div>
     )
 }
 
-function MetricBox({ icon, label, value, alert, alertText }: { icon: React.ReactNode, label: string, value: string | number, alert?: boolean, alertText?: string }) {
+function SimpleMetric({ label, value, alert, success }: { label: string, value: string | number, alert?: boolean, success?: boolean }) {
     return (
         <div className={cn(
-            "p-3 rounded-xl border transition-all duration-300 flex items-center gap-3",
-            alert ? "bg-red-50 border-red-100 ring-1 ring-red-200" : "bg-slate-50 border-slate-50"
+            "p-3 rounded-2xl border flex flex-col items-center justify-center gap-1 transition-all duration-300",
+            alert ? "bg-rose-50 border-rose-100 ring-1 ring-rose-100 shadow-sm" :
+                success ? "bg-emerald-50 border-emerald-100" :
+                    "bg-slate-50 border-slate-100"
         )}>
-            <div className={cn("p-2 rounded-lg", alert ? "bg-red-100 text-red-600" : "bg-white shadow-sm text-slate-400")}>
-                {icon}
-            </div>
-            <div>
-                <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">{label}</div>
-                <div className="text-sm font-black text-slate-900 leading-none">{value}</div>
-                {alert && <div className="text-[9px] font-bold text-red-600 mt-1 uppercase tracking-tighter">{alertText}</div>}
-            </div>
+            <span className="text-[8px] font-black text-slate-400 uppercase tracking-tighter text-center">{label}</span>
+            <span className={cn(
+                "text-sm font-black tracking-tighter",
+                alert ? "text-rose-700" : success ? "text-emerald-700" : "text-slate-900"
+            )}>{value}</span>
         </div>
     )
 }

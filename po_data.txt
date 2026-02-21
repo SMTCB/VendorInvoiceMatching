@@ -1,0 +1,23 @@
+[dotenv@17.3.1] injecting env (6) from .env.local -- tip: ??????  specify custom .env file path with { path: '/custom/path/.env' }
+URL: https://oewcfkevpvvvugrpqrxb.supabase.co
+--- PO HEADER (ekko) ---
+{
+  po_number: '4500002001',
+  vendor_id: '100050',
+  company_code: '1000',
+  created_at: '2026-02-19T10:42:05.769916+00:00',
+  currency: 'USD'
+}
+--- PO LINES (ekpo) ---
+Count: 1
+[
+  {
+    "id": "ef11d10e-1232-4545-a839-80e6d8b996be",
+    "po_number": "4500002001",
+    "line_item": 10,
+    "material": "MAT-S14_DUPLICATE",
+    "ordered_qty": 10,
+    "unit_price": 10,
+    "created_at": "2026-02-19T10:44:04.286075+00:00"
+  }
+]

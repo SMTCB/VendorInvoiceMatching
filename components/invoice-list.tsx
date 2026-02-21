@@ -14,6 +14,7 @@ import {
     X
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { StatusBadge } from '@/components/ui/invoice-status-badge'
 
 interface Invoice {
     id: string
@@ -163,34 +164,4 @@ export function InvoiceList({ invoices }: InvoiceListProps) {
     )
 }
 
-function StatusBadge({ status }: { status: string }) {
-    const styles: Record<string, string> = {
-        PROCESSING: 'bg-indigo-50 text-indigo-700 border-indigo-100 shadow-indigo-100/20',
-        READY_TO_POST: 'bg-emerald-50 text-emerald-700 border-emerald-100 shadow-emerald-100/20',
-        BLOCKED_PRICE: 'bg-amber-50 text-amber-700 border-amber-100 shadow-amber-100/20',
-        BLOCKED_QTY: 'bg-orange-50 text-orange-700 border-orange-100 shadow-orange-100/20',
-        POSTED: 'bg-slate-50 text-slate-600 border-slate-200',
-        REJECTED: 'bg-red-50 text-red-700 border-red-100 shadow-red-100/20',
-        AWAITING_INFO: 'bg-purple-50 text-purple-700 border-purple-100 shadow-purple-100/20'
-    }
 
-    const icons: Record<string, React.ReactNode> = {
-        PROCESSING: <Clock size={10} className="animate-spin" />,
-        READY_TO_POST: <CheckCircle size={10} />,
-        BLOCKED_PRICE: <AlertCircle size={10} />,
-        BLOCKED_QTY: <AlertCircle size={10} />,
-        POSTED: <CheckCircle size={10} />,
-        REJECTED: <AlertCircle size={10} />,
-        AWAITING_INFO: <AlertCircle size={10} />
-    }
-
-    return (
-        <span className={cn(
-            "px-3 py-1.5 rounded-xl text-[10px] font-black border flex items-center gap-2 w-fit uppercase tracking-wider shadow-sm",
-            styles[status] || 'bg-gray-100 text-gray-800 border-gray-200'
-        )}>
-            {icons[status] || <Layers size={10} />}
-            {status.replace(/_/g, ' ')}
-        </span>
-    )
-}

@@ -181,26 +181,6 @@ export function InvoiceCopilot({ invoiceNumber, vendorName, status, exceptionRea
                 )}
             </div>
 
-            {/* Suggested Intelligence Actions */}
-            {messages.length === 1 && (
-                <div className="px-6 pb-4">
-                    <div className="flex flex-wrap gap-2">
-                        <QuickAction
-                            label="Variance Report"
-                            onClick={() => handleQuickAction("Generate a detailed variance report for this invoice.")}
-                        />
-                        <QuickAction
-                            label="Vendor Risk"
-                            onClick={() => handleQuickAction("Analyze vendor reliability history.")}
-                        />
-                        <QuickAction
-                            label="Tax Audit"
-                            onClick={() => handleQuickAction("Verify tax compliance on this document.")}
-                        />
-                    </div>
-                </div>
-            )}
-
             {/* Input Dashboard */}
             <div className="p-6 bg-white border-t border-slate-100 shadow-[0_-10px_30px_rgba(0,0,0,0.02)]">
                 <div className="flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 focus-within:ring-2 focus-within:ring-brand-blue/10 focus-within:border-brand-blue/30 transition-all group">
