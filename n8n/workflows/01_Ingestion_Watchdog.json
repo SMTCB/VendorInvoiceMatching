@@ -111,40 +111,6 @@
     },
     {
       "parameters": {
-        "operation": "move",
-        "fileId": {
-          "__rl": true,
-          "value": "={{ $node[\"Download file\"].json[\"id\"] }}",
-          "mode": "id"
-        },
-        "driveId": {
-          "__rl": true,
-          "value": "My Drive",
-          "mode": "list"
-        },
-        "folderId": {
-          "__rl": true,
-          "value": "10_Y_bu9Cz99MataERG6ylQEi6Zec7Ht-",
-          "mode": "id"
-        }
-      },
-      "type": "n8n-nodes-base.googleDrive",
-      "typeVersion": 3,
-      "position": [
-        1168,
-        0
-      ],
-      "id": "878a3f14-2365-4741-adf5-fb644d0ebd72",
-      "name": "Move file",
-      "credentials": {
-        "googleDriveOAuth2Api": {
-          "id": "lSw2kca5NYlWFFag",
-          "name": "Google Drive account"
-        }
-      }
-    },
-    {
-      "parameters": {
         "operation": "executeQuery",
         "query": "INSERT INTO invoices (\n  invoice_number, \n  po_reference, \n  vendor_name_extracted, \n  total_amount, \n  line_items,\n  currency,\n  google_file_id, \n  status\n) VALUES (\n  '{{ $json.invoice_number }}', \n  '{{ $json.po_reference }}', \n  '{{ $json.vendor_name }}', \n  {{ $json.total_amount || 0 }}, \n  '{{ JSON.stringify($json.line_items || []).split(\"'\").join(\"''\") }}', \n  '{{ $json.currency }}', \n  '{{ $node[\"Download file\"].json[\"id\"] }}', \n  'PROCESSING'\n) \nON CONFLICT (google_file_id) \nDO UPDATE SET \n  invoice_number = EXCLUDED.invoice_number,\n  vendor_name_extracted = EXCLUDED.vendor_name_extracted,\n  total_amount = EXCLUDED.total_amount,\n  line_items = EXCLUDED.line_items,\n  currency = EXCLUDED.currency,\n  updated_at = NOW();",
         "options": {}
@@ -311,17 +277,6 @@
       ]
     },
     "Execute a SQL query": {
-      "main": [
-        [
-          {
-            "node": "Move file",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Move file": {
       "main": [
         [
           {

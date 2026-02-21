@@ -140,16 +140,20 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
     const handlePark = async () => {
         const isCurrentlyParked = invoice.status === 'PARKED';
         const confirmMsg = isCurrentlyParked
-            ? 'Release this invoice from Parked status and return to Processing?'
+            ? 'Release this invoice from Parked status?'
             : 'Are you sure you want to PARK this invoice?';
 
         if (!window.confirm(confirmMsg)) return;
         setLoading(true);
         try {
             const supabase = createClient();
+            // If unparking, we set it back to a reviewable state or its previous intended state.
+            // For now, setting to 'AWAITING_INFO' or similar is better than 'PROCESSING' if we want to avoid the scan loop.
+            const nextStatus = isCurrentlyParked ? 'AWAITING_INFO' : 'PARKED';
+
             const { error } = await supabase
                 .from('invoices')
-                .update({ status: isCurrentlyParked ? 'PROCESSING' : 'PARKED' })
+                .update({ status: nextStatus })
                 .eq('id', invoice.id);
 
             if (error) throw error;
@@ -249,9 +253,14 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
                     <button
                         onClick={handlePark}
                         disabled={loading}
-                        className="px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-xs font-bold text-slate-300 hover:bg-white/10 hover:text-white transition-all shadow-sm disabled:opacity-50"
+                        className={cn(
+                            "px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm disabled:opacity-50 border",
+                            invoice.status === 'PARKED'
+                                ? "bg-amber-100 border-amber-200 text-amber-700 hover:bg-amber-200"
+                                : "bg-white/5 border-white/10 text-slate-300 hover:bg-white/10 hover:text-white"
+                        )}
                     >
-                        {invoice.status === 'PARKED' ? 'Release' : 'Park'}
+                        {invoice.status === 'PARKED' ? 'Unpark' : 'Park'}
                     </button>
                     <button
                         disabled={loading || invoice.status === 'POSTED'}
@@ -269,46 +278,54 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
             <div className="flex-1 flex overflow-hidden">
 
                 {/* Left Panel: Document Hub */}
-                <div className="bg-slate-900/40 backdrop-blur-md rounded-3xl p-8 border border-white/10 shadow-2xl flex-1 flex flex-col min-h-[600px] relative overflow-hidden group">
-                    <div className="flex items-center justify-between mb-4">
+                <div className="w-[45%] bg-slate-900 border-r border-white/10 flex flex-col relative group">
+                    <div className="bg-slate-800/50 px-6 py-3 flex items-center justify-between border-b border-white/5">
                         <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                             <FileText size={12} className="text-brand-cyan" /> DOCUMENT SOURCE ARTIFACT
                         </span>
                         {invoice.pdf_link && (
-                            <a href={invoice.pdf_link} target="_blank" rel="noopener noreferrer" className="text-[10px] font-bold text-brand-cyan hover:underline flex items-center gap-1">
+                            <a
+                                href={invoice.pdf_link.replace('/preview', '/view')}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-[10px] font-bold text-brand-cyan hover:underline flex items-center gap-1"
+                            >
                                 FULL VIEW <ExternalLink size={10} />
                             </a>
                         )}
                     </div>
-                    {isProcessing ? (
-                        <div className="flex-1 flex flex-col items-center justify-center space-y-6">
-                            <div className="relative">
-                                <div className="w-24 h-24 rounded-full border-4 border-slate-700 border-t-brand-cyan animate-spin" />
-                                <Zap size={32} className="absolute inset-0 m-auto text-brand-cyan animate-pulse" />
-                            </div>
-                            <div>
-                                <h3 className="text-xl font-bold text-white">Gemini Extracting Data</h3>
-                                <p className="text-sm text-slate-400 mt-2">Running OCR and identifying line items...</p>
-                            </div>
-                        </div>
-                    ) : (invoice.pdf_link && invoice.pdf_link.startsWith('http')) ? (
-                        <div className="relative w-full h-full group/pdf">
-                            <iframe
-                                src={invoice.pdf_link}
-                                className="w-full h-full border-none rounded-xl"
-                                title="Invoice PDF"
-                            />
-                        </div>
-                    ) : (
-                        <div className="flex-1 flex flex-col items-center justify-center text-slate-600 border-2 border-dashed border-white/5 rounded-2xl bg-white/5">
-                            <FileText size={48} className="mb-4 opacity-20" />
-                            <div className="font-bold">Preview Restricted</div>
-                            <p className="text-xs mt-2 opacity-50 max-w-[200px] text-center">Chrome policy may block GDrive embeds. Click 'Full View' above.</p>
-                        </div>
-                    )}
 
-                    {/* Visual scan animation effect */}
-                    {isProcessing && <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-brand-cyan/50 to-transparent translate-y-[-100%] animate-scan" />}
+                    <div className="flex-1 overflow-hidden p-6 flex flex-col">
+                        <div className="flex-1 bg-slate-800 rounded-2xl border border-white/5 shadow-2xl relative overflow-hidden flex flex-col h-full">
+                            {isProcessing ? (
+                                <div className="flex-1 flex flex-col items-center justify-center space-y-6">
+                                    <div className="relative">
+                                        <div className="w-24 h-24 rounded-full border-4 border-slate-700 border-t-brand-cyan animate-spin" />
+                                        <Zap size={32} className="absolute inset-0 m-auto text-brand-cyan animate-pulse" />
+                                    </div>
+                                    <div>
+                                        <h3 className="text-xl font-bold text-white text-center">Gemini Extracting Data</h3>
+                                        <p className="text-sm text-slate-400 mt-2 text-center">Running OCR and identifying line items...</p>
+                                    </div>
+                                </div>
+                            ) : (invoice.pdf_link && invoice.pdf_link.startsWith('http')) ? (
+                                <iframe
+                                    src={invoice.pdf_link.includes('drive.google.com') && !invoice.pdf_link.endsWith('/preview') ? invoice.pdf_link.replace(/\/(view|edit).*/, '/preview') : invoice.pdf_link}
+                                    className="w-full h-full border-none"
+                                    title="Invoice PDF"
+                                />
+                            ) : (
+                                <div className="flex-1 flex flex-col items-center justify-center text-slate-500 p-12 text-center">
+                                    <FileText size={48} className="mb-4 opacity-20" />
+                                    <div className="font-bold text-white">Preview Unavailable</div>
+                                    <p className="text-xs mt-2 opacity-50 max-w-[200px]">The document source might be restricted or pending sync. Click "Full View" to open in a new tab.</p>
+                                </div>
+                            )}
+
+                            {/* Visual scan animation effect */}
+                            {isProcessing && <div className="absolute top-0 left-0 w-full h-[2px] bg-brand-cyan shadow-[0_0_15px_rgba(34,211,238,0.8)] z-10 animate-scan" />}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Right Panel: AI Controller */}
@@ -503,8 +520,13 @@ export function InvoiceDetailView({ invoice, poLines }: InvoiceDetailViewProps) 
 
             <style jsx global>{`
                 @keyframes scan {
-                    0% { transform: translateY(-100%); }
-                    100% { transform: translateY(1000%); }
+                    0% { top: 0%; opacity: 0; }
+                    10% { opacity: 1; }
+                    90% { opacity: 1; }
+                    100% { top: 100%; opacity: 0; }
+                }
+                .animate-scan {
+                    animation: scan 3s linear infinite;
                 }
             `}</style>
         </div>
